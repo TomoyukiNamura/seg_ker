@@ -1,23 +1,26 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import numpy as np
+import tensorflow as tf
 import keras
 from PIL import Image
-
-#from model import SegNet
-from model_basic import SegNet
-
 import dataset
 
-height = 360
-width = 480
+
+input_shape = (360, 480, 3)
 classes = 12
-epochs = 100
-batch_size = 1
-log_filepath='./logs_100/'
 
-data_shape = 360*480
+data_path = './CamVid/'
+test_file = 'test.txt'
 
+trained_model_path = './trained_models/'
+trained_model_name = 'seg_basic_epoch1.h5'
+
+output_file = './output/'
+
+
+
+# 結果画像の保存用関数
 def writeImage(image, filename):
     """ label data to colored image """
     Sky = [128,128,128]
@@ -49,16 +52,35 @@ def writeImage(image, filename):
     im.save(filename)
 
 
-
-print("loading data...")
-ds = dataset.Dataset(test_file='test.txt', classes=classes)
-test_X, test_y = ds.load_data('test') # need to implement, y shape is (None, 360, 480, classes)
-test_X = ds.preprocess_inputs(test_X)
-test_Y = ds.reshape_labels(test_y)
+## set gpu usage
+#config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True, per_process_gpu_memory_fraction = 0.8))
+#config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=False))
+config = tf.ConfigProto(device_count={'GPU': 0})
 
 
-model = keras.models.load_model('trained_models/seg_basic_epoch1.h5')
-probs = model.predict(test_X, batch_size=1)
-prob = probs[len(probs)-1].reshape((height, width, classes)).argmax(axis=2)
-
-writeImage(prob, 'val.png')
+with tf.Session(config=config) as session:
+    
+    # データセット読み込み用インスタンスの初期化
+    ds = dataset.Dataset(data_shape=input_shape, classes=classes, data_path=data_path, test_file=test_file)
+    
+    # 評価データ(入力画像とアノテーション)の読み込み
+    print("loading test data...")
+    test_X, test_y = ds.load_data('test') # need to implement, y shape is (None, 360, 480, classes)
+    test_X = ds.preprocess_inputs(test_X)
+    test_Y = ds.reshape_labels(test_y)
+    print("end")
+    
+    # モデル読み込み
+    print("loading SegNet...")
+    model = keras.models.load_model(trained_model_path + trained_model_name)
+    print("end")
+    
+    # 評価を実行
+    print("running SegNet...")
+    probs = model.predict(test_X, batch_size=1)
+    print("end")
+    
+    # 評価結果を保存
+    for i in range(probs.shape[0]):
+        prob = probs[i].reshape((input_shape[0], input_shape[1], classes)).argmax(axis=2)
+        writeImage(prob, output_file + f'result_{i}.png')
