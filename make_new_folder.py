@@ -7,7 +7,7 @@ import shutil
 import numpy as np
 
 ## ディレクトリ変更
-os.chdir('/Users/tomoyuki/python_workspace/carla_makefolder')
+os.chdir('myfoldername')
 current_pass = os.getcwd()
 
 # フォルダ作成関数
