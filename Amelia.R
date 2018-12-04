@@ -25,3 +25,6 @@ data_imputed <- amelia(data,   # 欠損ありデータ（data.frame形式）
 data_imputed$imputations # m回の欠損補完結果を表示
 data_imputed$imputations$imp4 # 特定の欠損補完結果(4回目)を表示
 
+
+
+https://tech.nikkeibp.co.jp/dm/atcl/feature/15/327441/072000213/?ST=health&P=2
