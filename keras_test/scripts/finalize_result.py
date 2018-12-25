@@ -56,6 +56,8 @@ for alphabet in ["A","B","C","D"]:
 result_list = pd.concat(result_list, axis=0)          
 result_list.index =df_index_master.index
 
+#result_list.shape
+#df_index_master.shape
 
 # finalizeファイル作成
 result_list.to_csv(f"output/{finalize_folder_name}/finalize_{finalize_folder_name}.csv", index=True, header=False)

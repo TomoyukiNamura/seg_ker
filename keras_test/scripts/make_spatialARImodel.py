@@ -31,7 +31,7 @@ import scripts.model as model
 
 
 # データ読み込み
-file_name = "track_D.csv"
+file_name = "track_B.csv"
 df_track = pd.read_csv(f"input/{file_name}")
 df_track.head()
 
@@ -81,14 +81,14 @@ df_irregularity.shape
 
 ## スモールデータ =====================================
 # 訓練データ，評価データの設定
-target_milage_id_list = range(1300,1500)
+target_milage_id_list = range(100,300)
 
 t_pred = 41#91
 
 #start_date_id=15 # start_date_id日目の原系列，差分系列を初期値とする＝＞start_date_id+1日目から予測
-start_date_id=200#150
+start_date_id=150
 
-train_date_id_list = range(0,200)
+train_date_id_list = range(0,150)
 
 #train_date_id_list = list(range(0, 50))
 #train_date_id_list.extend(list(range(100,190)))
