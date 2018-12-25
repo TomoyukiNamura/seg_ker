@@ -12,18 +12,8 @@ from copy import deepcopy
 from tqdm import tqdm
 import time
 
-
 from scripts import make_data_funcs
 from scripts import ARIMA_funcs
-
-
-
-#import configparser
-#inifile = configparser.ConfigParser()
-#inifile.read('scripts/main.ini', 'UTF-8')
-#
-#print(type(inifile.get('input', 'file_name')))
-#print(type(inifile.get('prior', 'window')))
 
 
 
@@ -40,7 +30,7 @@ makeNewFolder(output_pass)
 
 
 # データ読み込み
-file_name = "track_D.csv"
+file_name = "track_C.csv"
 df_track = pd.read_csv(f"input/{file_name}")
 df_track.head()
 
@@ -74,30 +64,31 @@ t_pred = 91  # 原則変更しない
 start_date_id=df_irregularity.shape[0]-1 # start_date_id日目の原系列，差分系列を初期値とする＝＞start_date_id+1日目から予測
 
 # 訓練期間
-#train_date_id_list = range(90, 190)
-train_date_id_list = list(range(0, 50))
-train_date_id_list.extend(list(range(100,190)))
+#train_date_id_list = list(range(0, 50))
+#train_date_id_list.extend(list(range(100,190)))
+
+
+#train_date_id_list = list(range(0, 200)) # track A
+train_date_id_list = list(range(0, 300)) # track B
+#train_date_id_list = list(range(0, 190)) # track C
+#train_date_id_list = list(range(0, 190)) # track D
 
 
 # 前処理(原系列)の設定
-tol_sigma_raw_prior = 2
-window=10
+tol_sigma_raw_prior = 2.5
+window=30
 min_periods=3
 center=True
 
 # 前処理(差分系列)の設定
-tol_sigma_diff_prior = 2
-window_diff=10
+tol_sigma_diff_prior = 1.0
+window_diff=3
 min_periods_diff=1
 center_diff=True
 
 # 予測モデルの設定
 model_name_pred = "lm"     #"SVR"
 n_diff = 3
-
-# 後処理の設定
-posterior_start_date_id_list = range(110, 200, 30)
-model_name_post = "lm"
 
 
 
@@ -138,31 +129,9 @@ df_pred_raw, maked_model_dict, inspects_dict_dict = ARIMA_funcs.predWithARIMA(or
 
 
 
-
-
-
-### 後処理：予測値と実測値の差分と経過日数の回帰モデルを作成し，予測結果にゲタ履かせ=====================
-#print("\n・後処理 ===============================\n")
-#time.sleep(0.5)
-#
-#df_pred_raw = ARIMA_funcs.postTreat(df_pred_raw=df_pred_raw, posterior_start_date_id_list=posterior_start_date_id_list, model_name_post=model_name_post, model_name_pred=model_name_pred, org_dict=org_dict, train_dict=train_dict, n_diff=n_diff, t_pred=t_pred)
-#
-#print("\n完了 ===============================\n")
-
-
 ## 結果 =============================================================
 # 予測結果を保存
 df_pred_raw.to_csv(f"{output_pass}/pred_{file_name}",index=False)
 
-
-## 結果をプロット
-#milage_id_list = range(190,200)
-#for milage_id in milage_id_list:
-#    milage = list(df_pred_raw.columns)[milage_id]
-#    ARIMA_funcs.PlotTruthPred(df_train=train_dict["raw0"][milage], df_truth=None, df_pred=df_pred_raw[milage], inspects_dict=None, 
-#            ylim=[-15,15], r_plot_size=1,output_dir=f"ARIMA_C_{model_name_pred}_honban", file_name=f"{milage_id}_{milage}")
-    
-    
-  
-            
+      
 

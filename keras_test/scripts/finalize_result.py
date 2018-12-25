@@ -7,7 +7,7 @@ from copy import deepcopy
 from tqdm import tqdm
 
 # ファイナライズ対象のフォルダ名
-finalize_folder_name = "20181225"
+finalize_folder_name = "20181226"
 
 
 ## 
@@ -55,7 +55,6 @@ for alphabet in ["A","B","C","D"]:
         
 result_list = pd.concat(result_list, axis=0)          
 result_list.index =df_index_master.index
-
 
 
 # finalizeファイル作成

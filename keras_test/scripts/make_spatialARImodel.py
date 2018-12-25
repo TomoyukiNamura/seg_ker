@@ -81,30 +81,31 @@ df_irregularity.shape
 
 ## スモールデータ =====================================
 # 訓練データ，評価データの設定
-target_milage_id_list = range(12700,12800)
+target_milage_id_list = range(1300,1500)
 
-t_pred = 91
+t_pred = 41#91
 
 #start_date_id=15 # start_date_id日目の原系列，差分系列を初期値とする＝＞start_date_id+1日目から予測
-start_date_id=150
+start_date_id=200#150
 
-#train_date_id_list = list(range(60, 150)).extend(range(100,190))
-train_date_id_list = list(range(0, 50))
-train_date_id_list.extend(list(range(100,190)))
+train_date_id_list = range(0,200)
+
+#train_date_id_list = list(range(0, 50))
+#train_date_id_list.extend(list(range(100,190)))
 
 
 test_date_id_list = range(start_date_id+1, start_date_id+1+t_pred)
 
 
 # 前処理(原系列)の設定
-tol_sigma_raw_prior = 2
-window=50
+tol_sigma_raw_prior = 2.5
+window=30
 min_periods=3
 center=True
 
 # 前処理(差分系列)の設定
-tol_sigma_diff_prior = 2
-window_diff=50
+tol_sigma_diff_prior = 1.0
+window_diff=3
 min_periods_diff=1
 center_diff=True
 
@@ -112,9 +113,9 @@ center_diff=True
 model_name_pred = "lm"     #"SVR"
 n_diff = 3
 
-# 後処理の設定
-posterior_start_date_id_list = range(110, 200, 30)
-model_name_post = "lm"
+## 後処理の設定
+#posterior_start_date_id_list = range(110, 200, 30)
+#model_name_post = "lm"
 
 
 
@@ -122,7 +123,25 @@ model_name_post = "lm"
 df_irregularity_small = deepcopy(df_irregularity.iloc[:,target_milage_id_list])
 
 #for milage in list(df_irregularity_small.columns):
-#    plt.plot(df_irregularity_small[milage]);plt.ylim([-15,15]);plt.grid();plt.show()
+#    plt.plot(df_irregularity_small[milage]);plt.ylim([-5,5]);plt.grid();plt.show()
+
+
+
+##milage='m22730'
+##
+#for milage in list(df_irregularity_small.columns):
+#    plt.plot(df_irregularity_small[milage].diff());plt.ylim([-0.5,0.5]);plt.title(milage);plt.grid();plt.show()
+#    cor_list = []
+#    for i in range(30):
+#        tmp = df_irregularity_small[milage].diff()
+#        tmp_isnotmiss = np.logical_or(tmp.isna(), tmp.shift(i).isna())==False
+#        cor_list.append(np.corrcoef(tmp[tmp_isnotmiss], tmp.shift(i)[tmp_isnotmiss])[0][1])
+#    
+#    plt.plot(cor_list);plt.grid();plt.title(milage);plt.ylim([-1,1]);plt.show()
+#
+#
+##plt.hist(df_irregularity_small[milage].diff(),range=[-0.5,0.5],bins=15);plt.show()
+
 
 
 
@@ -139,16 +158,40 @@ org_dict["raw0"] = deepcopy(df_irregularity_small)
 org_dict["raw0_prior_treated"] = make_data_funcs.priorRawData(df_raw=deepcopy(df_irregularity_small), tol_sigma = tol_sigma_raw_prior, 
                                                               window=window, min_periods=min_periods, center=center)
 
+
+
+#milage_list = ["m23803", "m23804", "m23805", "m23806"]
+#for milage in milage_list:
+#    plt.plot(org_dict["raw0"][milage])
+#    plt.plot(org_dict["raw0_prior_treated"][milage])
+#    plt.grid();plt.title(milage);plt.show()
+
+
+
+
 # 差分系列の前処理：絶対値がmu+sigma*tol_sigma超過のデータをNaNに変更
 org_dict["diff0"] = make_data_funcs.priorDiffData(df_raw=deepcopy(org_dict["raw0_prior_treated"]), n_diff=n_diff, tol_sigma=tol_sigma_diff_prior, window=window_diff, min_periods=min_periods_diff, center=center_diff)
     
+#for milage in milage_list:
+##    plt.plot(org_dict["raw0"].diff()[milage])
+#    plt.plot(org_dict["diff0"][milage])
+#    plt.grid();plt.title(milage);plt.show()
+##    plt.hist(org_dict["diff0"][milage],range=[-0.01,0.01],bins=15);plt.show()
+
+
 # n_diff+1期分の差分系列をまとめる
 for i in range(n_diff):
     org_dict[f"diff{i+1}"] = org_dict["diff0"].shift(i+1)
 
 
 
-
+#vec_1 = org_dict["diff0"]["m23820"]
+#vec_2 = org_dict["diff0"]["m23821"]
+#tmp1 = vec_1.isna()==False
+#tmp2 = vec_2.isna()==False
+#tmp = np.logical_and(tmp1, tmp2)
+#np.corrcoef(vec_1[tmp],vec_2[tmp])
+#plt.scatter(vec_1,vec_2)
 
 ## 予測モデル作成・逐次予測===============================================================
 print("\n・予測モデル作成・逐次予測 ===============================\n")
@@ -165,12 +208,11 @@ test_dict = {}
 for key in list(org_dict.keys()):
     test_dict[key] = deepcopy(org_dict[key].iloc[test_date_id_list,:])
 
-## ARIMA(n_diff,1,0)による逐次予測
-    
-    
-    
-df_pred_raw, maked_model_dict, inspects_dict_dict = ARIMA_funcs.predWithARIMA(org_dict=org_dict, train_dict=train_dict, n_diff=n_diff, start_date_id=start_date_id, t_pred=t_pred, model_name=model_name_pred)
 
+
+## ARIMA(n_diff,1,0)による逐次予測
+df_pred_raw_lm, maked_model_dict, inspects_dict_dict = ARIMA_funcs.predWithARIMA(org_dict=org_dict, train_dict=train_dict, n_diff=n_diff, start_date_id=start_date_id, t_pred=t_pred, model_name="lm")
+df_pred_raw_mean, _, _ = ARIMA_funcs.predWithARIMA(org_dict=org_dict, train_dict=train_dict, n_diff=n_diff, start_date_id=start_date_id, t_pred=t_pred, model_name="mean")
 
 
 
@@ -186,29 +228,46 @@ df_pred_raw, maked_model_dict, inspects_dict_dict = ARIMA_funcs.predWithARIMA(or
 
 ## 結果 =============================================================
 
-# MAE計算
-mae_dict = {}
-for milage in list(df_pred_raw.columns):
-    mae_dict[milage] = ARIMA_funcs.calcMAE(df_truth=test_dict["raw0"][milage], df_pred=df_pred_raw[milage])
+# MAE計算・プロット
+print("MAE lm")
+mae_dict_lm = {}
+for milage in list(df_pred_raw_lm.columns):
+    mae_dict_lm[milage] = ARIMA_funcs.calcMAE(df_truth=test_dict["raw0"][milage], df_pred=df_pred_raw_lm[milage])
+ARIMA_funcs.plotTotalMAE(mae_dict=mae_dict_lm, ylim=[0.0, 1.0], r_plot_size=1, output_dir=f"ARIMA_C_lm")
 
-# MAEプロット
-ARIMA_funcs.plotTotalMAE(mae_dict=mae_dict, ylim=[0.0, 1.0], r_plot_size=1, output_dir=f"ARIMA_C_{model_name_pred}")
+print("MAE mean")
+mae_dict_mean = {}
+for milage in list(df_pred_raw_mean.columns):
+    mae_dict_mean[milage] = ARIMA_funcs.calcMAE(df_truth=test_dict["raw0"][milage], df_pred=df_pred_raw_mean[milage])
+ARIMA_funcs.plotTotalMAE(mae_dict=mae_dict_mean, ylim=[0.0, 1.0], r_plot_size=1, output_dir=f"ARIMA_C_mean")
+
+
+# lmとmeanのMAEの差分を計算・プロット(-の値の部分でlmが優っている)
+diff_mae = np.array(list(mae_dict_lm.values())) - np.array(list(mae_dict_mean.values()))
+plt.plot(diff_mae, color="red");plt.ylim([-0.1, 0.1]);plt.grid();plt.show()
+
 
 
 # 結果をプロット
-milage_id_list = range(0,45)
-ylim=[-5,5]
+milage_id_list = range(125,130)
+ylim=[-11,11]
 for milage_id in milage_id_list:
-    milage = list(df_pred_raw.columns)[milage_id]
+    milage = list(df_pred_raw_lm.columns)[milage_id]
+    print(f"\n{milage_id} {milage} ======================================================\n")
+    print("lm")
+
     if inspects_dict_dict!=None:
         inspects_dict = inspects_dict_dict[milage]
     else:
         inspects_dict = None
-    ARIMA_funcs.PlotTruthPred(df_train=train_dict["raw0"][milage], df_truth=test_dict["raw0"][milage], df_pred=df_pred_raw[milage], inspects_dict=inspects_dict, 
-            ylim=ylim, r_plot_size=1,output_dir=f"ARIMA_C_{model_name_pred}", file_name=f"{milage_id}_{milage}")
         
+    ARIMA_funcs.PlotTruthPred(df_train=train_dict["raw0"][milage], df_truth=test_dict["raw0"][milage], df_pred=df_pred_raw_lm[milage], inspects_dict=inspects_dict, 
+            ylim=ylim, r_plot_size=1,output_dir=f"ARIMA_C_lm", file_name=f"{milage_id}_{milage}")
     
-    
+    print("mean")
+    ARIMA_funcs.PlotTruthPred(df_train=train_dict["raw0"][milage], df_truth=test_dict["raw0"][milage], df_pred=df_pred_raw_mean[milage], inspects_dict=inspects_dict, 
+            ylim=ylim, r_plot_size=1,output_dir=f"ARIMA_C_mean", file_name=f"{milage_id}_{milage}")
+        
     
 
 

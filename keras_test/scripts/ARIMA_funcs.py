@@ -104,7 +104,7 @@ def predWithARIMA(org_dict, train_dict, n_diff, start_date_id, t_pred, model_nam
     for milage in tqdm(list(train_dict["raw0"].columns)):
         
         # 直近10日間平均を原系列初期値に設定(直近10日にデータがない場合，過去5日分データを初期値に利用)
-        start_vector = org_dict["raw0"].loc[range(start_date_id-10,start_date_id),milage].dropna()
+        start_vector = org_dict["raw0"].loc[range(start_date_id-5,start_date_id),milage].dropna()
         if start_vector.shape[0]==0:
              start_vector = org_dict["raw0"].loc[range(start_date_id),milage].dropna().tail(5)
         start_mean = np.mean(np.array(start_vector))
@@ -118,8 +118,8 @@ def predWithARIMA(org_dict, train_dict, n_diff, start_date_id, t_pred, model_nam
             if model_name=="lm":
                 # 初期値データ作成
                 start_raw, start_diff, start_values_result = dfDict2ARIMAInit(df_dict=org_dict, n_diff=n_diff, milage=milage, start_date_id=start_date_id)
-                #inspects_dict_dict[milage] = start_values_result
-                #inspects_dict_dict[milage]["n_train"] = X.shape[0]
+                inspects_dict_dict[milage] = start_values_result
+                inspects_dict_dict[milage]["n_train"] = X.shape[0]
                 
                 model = lm()
                 model.fit(X=X, y=y)
@@ -153,7 +153,7 @@ def predWithARIMA(org_dict, train_dict, n_diff, start_date_id, t_pred, model_nam
                 for i in range(t_pred):
                     pred_raw_list.append(start_mean)
                     
-                inspects_dict_dict = None
+                inspects_dict_dict[milage] = None
                     
         else:
             # 直近10日平均値で逐次予測
@@ -161,7 +161,7 @@ def predWithARIMA(org_dict, train_dict, n_diff, start_date_id, t_pred, model_nam
             for i in range(t_pred):
                 pred_raw_list.append(start_mean)
                 
-            inspects_dict_dict = None
+            inspects_dict_dict[milage] = None
             
         
         df_pred_raw.append(pd.DataFrame({milage:pred_raw_list}))
