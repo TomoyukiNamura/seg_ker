@@ -69,8 +69,8 @@ start_date_id=df_irregularity.shape[0]-1 # start_date_id日目の原系列，差
 
 
 #train_date_id_list = list(range(0, 200)) # track A
-train_date_id_list = list(range(0, 300)) # track B
-#train_date_id_list = list(range(0, 190)) # track C
+#train_date_id_list = list(range(0, 300)) # track B
+train_date_id_list = list(range(0, 220)) # track C
 #train_date_id_list = list(range(0, 190)) # track D
 
 
