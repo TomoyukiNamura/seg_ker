@@ -128,7 +128,7 @@ def priorRawData(df_raw, tol_sigma = 2.5, window=7, min_periods=1, center=False,
     return df_result
 
 
-def priorDiffData(df_raw, n_diff, tol_sigma, window=7, min_periods=1, center=False):
+def priorDiffData(org_df_raw, df_raw, n_diff, tol_sigma, window=7, min_periods=1, center=False):
     
     df_result = deepcopy(df_raw.diff())
 
@@ -138,9 +138,12 @@ def priorDiffData(df_raw, n_diff, tol_sigma, window=7, min_periods=1, center=Fal
         # 差分系列取得
         tmp_irregularity = df_result[milage].dropna()
         
-        # 25%点，75％点を計算
-        Q3 = tmp_irregularity.quantile(.75)
-        Q1 = tmp_irregularity.quantile(.25)
+        # 前処理前の差分系列から，もともとNaNでない部分の情報をちゅうしゅつ
+        isnot_nan = org_df_raw[milage].diff().isna()==False
+        
+        # もともとNaNでない部分に限定し，25%点，75％点を計算
+        Q3 = tmp_irregularity[isnot_nan].quantile(.75)
+        Q1 = tmp_irregularity[isnot_nan].quantile(.25)
         
         # 4分位範囲計算
         quantile_range = (Q3 - Q1) * tol_sigma

@@ -30,7 +30,8 @@ makeNewFolder(output_pass)
 
 
 # データ読み込み
-file_name = "track_C.csv"
+track = "B"
+file_name = f"track_{track}.csv"
 df_track = pd.read_csv(f"input/{file_name}")
 df_track.head()
 
@@ -57,7 +58,7 @@ df_irregularity.shape
 
 
 
-## 設定
+## 設定 ===========================================================
 # 予測対象キロ程，予測期間
 target_milage_id_list = range(df_irregularity.shape[1])   # 原則変更しない
 t_pred = 91  # 原則変更しない
@@ -67,21 +68,27 @@ start_date_id=df_irregularity.shape[0]-1 # start_date_id日目の原系列，差
 #train_date_id_list = list(range(0, 50))
 #train_date_id_list.extend(list(range(100,190)))
 
-
-#train_date_id_list = list(range(0, 200)) # track A
-#train_date_id_list = list(range(0, 300)) # track B
-train_date_id_list = list(range(0, 220)) # track C
-#train_date_id_list = list(range(0, 190)) # track D
+if track=="A":
+    train_date_id_list = list(range(0, 200)) # track A
+    
+elif track=="B":
+    train_date_id_list = list(range(0, 300)) # track B
+    
+elif track=="C":
+    train_date_id_list = list(range(0, 220)) # track C
+    
+elif track=="D":
+    train_date_id_list = list(range(0, 190)) # track D
 
 
 # 前処理(原系列)の設定
 tol_sigma_raw_prior = 2.5
-window=30
+window=80
 min_periods=3
 center=True
 
 # 前処理(差分系列)の設定
-tol_sigma_diff_prior = 1.0
+tol_sigma_diff_prior = 2.0
 window_diff=3
 min_periods_diff=1
 center_diff=True
@@ -89,7 +96,6 @@ center_diff=True
 # 予測モデルの設定
 model_name_pred = "lm"     #"SVR"
 n_diff = 3
-
 
 
 
@@ -107,7 +113,7 @@ org_dict["raw0_prior_treated"] = make_data_funcs.priorRawData(df_raw=deepcopy(df
                                                               window=window, min_periods=min_periods, center=center)
 
 # 差分系列の前処理：絶対値がmu+sigma*tol_sigma超過のデータをNaNに変更
-org_dict["diff0"] = make_data_funcs.priorDiffData(df_raw=deepcopy(org_dict["raw0_prior_treated"]), n_diff=n_diff, tol_sigma=tol_sigma_diff_prior, window=window_diff, min_periods=min_periods_diff, center=center_diff)    
+org_dict["diff0"] = make_data_funcs.priorDiffData(org_df_raw=org_dict["raw0"],df_raw=deepcopy(org_dict["raw0_prior_treated"]), n_diff=n_diff, tol_sigma=tol_sigma_diff_prior, window=window_diff, min_periods=min_periods_diff, center=center_diff)    
 
 # n_diff+1期分の差分系列をまとめる
 for i in range(n_diff):
@@ -123,10 +129,19 @@ time.sleep(0.5)
 train_dict = {}
 for key in list(org_dict.keys()):
     train_dict[key] = deepcopy(org_dict[key].iloc[train_date_id_list,:])
-    
-## 逐次予測
-df_pred_raw, maked_model_dict, inspects_dict_dict = ARIMA_funcs.predWithARIMA(org_dict=org_dict, train_dict=train_dict, n_diff=n_diff, start_date_id=start_date_id, t_pred=t_pred, model_name=model_name_pred)
+ 
 
+# オリジナル原系列の訓練データ範囲のデータ数調査
+print("オリジナル原系列の訓練データ範囲のデータ数調査\n")
+time.sleep(0.5)
+n_org_train_dict = {}
+tmp_bool = org_dict["raw0"].iloc[train_date_id_list,:].isna()==False
+for milage in tqdm(list(org_dict["raw0"].columns)):
+    n_org_train_dict[milage] = tmp_bool[milage][tmp_bool[milage]==True].shape[0]
+
+
+## 逐次予測
+df_pred_raw, maked_model_dict, inspects_dict_dict = ARIMA_funcs.predWithARIMA(org_dict=org_dict, train_dict=train_dict, n_diff=n_diff, start_date_id=start_date_id, t_pred=t_pred, model_name=model_name_pred, n_org_train_dict=n_org_train_dict)
 
 
 ## 結果 =============================================================
@@ -134,4 +149,3 @@ df_pred_raw, maked_model_dict, inspects_dict_dict = ARIMA_funcs.predWithARIMA(or
 df_pred_raw.to_csv(f"{output_pass}/pred_{file_name}",index=False)
 
       
-

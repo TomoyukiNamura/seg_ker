@@ -95,7 +95,7 @@ def recursivePredARIMA(model, start_diff, start_raw, t_pred):
     return pred_raw_list
 
 
-def predWithARIMA(org_dict, train_dict, n_diff, start_date_id, t_pred, model_name):
+def predWithARIMA(org_dict, train_dict, n_diff, start_date_id, t_pred, model_name, n_org_train_dict):
         
     df_pred_raw = []
     maked_model_dict = {}
@@ -113,8 +113,8 @@ def predWithARIMA(org_dict, train_dict, n_diff, start_date_id, t_pred, model_nam
         y, X = dfDict2ARIMAInput(df_dict=train_dict, n_diff=n_diff, milage=milage)
 #        X = np.array([0])
         
-        # モデル学習・逐次予測
-        if X.shape[0] >= 30:
+        # モデル学習・逐次予測(訓練データ数が30以上，かつ訓練期間の原系列数が30以上のものに限りモデル作成)
+        if X.shape[0] >= 30 and n_org_train_dict[milage] >= 30 :
             if model_name=="lm":
                 # 初期値データ作成
                 start_raw, start_diff, start_values_result = dfDict2ARIMAInit(df_dict=org_dict, n_diff=n_diff, milage=milage, start_date_id=start_date_id)
@@ -126,8 +126,7 @@ def predWithARIMA(org_dict, train_dict, n_diff, start_date_id, t_pred, model_nam
                 #maked_model_dict[milage] = model
                 
                 # 逐次予測
-                start_mean = np.reshape(np.array(start_mean), (1,1))
-                pred_raw_list = recursivePredARIMA(model=model, start_diff=start_diff, start_raw=start_mean, t_pred=t_pred)
+                pred_raw_list = recursivePredARIMA(model=model, start_diff=start_diff, start_raw=np.reshape(np.array(start_mean), (1,1)), t_pred=t_pred)
     #            pred_raw_list = recursivePredARIMA(model=model_lm, start_diff=start_diff, start_raw=start_raw, t_pred=t_pred)
                 
             elif model_name=="SVR":
@@ -143,8 +142,7 @@ def predWithARIMA(org_dict, train_dict, n_diff, start_date_id, t_pred, model_nam
                 # 逐次予測
 #                start_mean = np.array(np.mean(np.array(org_dict["raw0"].loc[range(start_date_id-10,start_date_id),milage].dropna())))
 #                start_mean = np.reshape(start_mean, (1,1))
-                start_mean = np.reshape(np.array(start_mean), (1,1))
-                pred_raw_list = recursivePredARIMA(model=model, start_diff=start_diff, start_raw=start_mean, t_pred=t_pred)
+                pred_raw_list = recursivePredARIMA(model=model, start_diff=start_diff, start_raw=np.reshape(np.array(start_mean), (1,1)), t_pred=t_pred)
     #            pred_raw_list = recursivePredARIMA(model=model_lm, start_diff=start_diff, start_raw=start_raw, t_pred=t_pred)
             
             else:
@@ -156,6 +154,15 @@ def predWithARIMA(org_dict, train_dict, n_diff, start_date_id, t_pred, model_nam
                 inspects_dict_dict[milage] = None
                     
         else:
+            # 直近10日平均値で逐次予測
+            pred_raw_list = []
+            for i in range(t_pred):
+                pred_raw_list.append(start_mean)
+                
+            inspects_dict_dict[milage] = None
+            
+        ## 予測結果絶対値が30を超過する場合，平均値に置き換え
+        if any(np.abs(pred_raw_list) > 30):
             # 直近10日平均値で逐次予測
             pred_raw_list = []
             for i in range(t_pred):

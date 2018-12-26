@@ -31,7 +31,8 @@ import scripts.model as model
 
 
 # データ読み込み
-file_name = "track_B.csv"
+track = "B"
+file_name = f"track_{track}.csv"
 df_track = pd.read_csv(f"input/{file_name}")
 df_track.head()
 
@@ -81,30 +82,40 @@ df_irregularity.shape
 
 ## スモールデータ =====================================
 # 訓練データ，評価データの設定
-target_milage_id_list = range(100,300)
+target_milage_id_list = range(3900,4000)
 
-t_pred = 41#91
-
-#start_date_id=15 # start_date_id日目の原系列，差分系列を初期値とする＝＞start_date_id+1日目から予測
-start_date_id=150
-
-train_date_id_list = range(0,150)
-
-#train_date_id_list = list(range(0, 50))
-#train_date_id_list.extend(list(range(100,190)))
-
+if track=="A":
+    t_pred = 41#91
+    start_date_id=150                 # start_date_id日目の原系列，差分系列を初期値とする＝＞start_date_id+1日目から予測
+    train_date_id_list = range(0,150)
+    
+elif track=="B":
+    t_pred = 41#91
+    start_date_id=200
+    train_date_id_list = range(0,200)
+    
+elif track=="C":
+    t_pred = 35#91
+    start_date_id=40
+    train_date_id_list = range(0,40)
+    
+elif track=="D":
+    t_pred = 41#91
+    start_date_id=150
+    train_date_id_list = range(0,150)
 
 test_date_id_list = range(start_date_id+1, start_date_id+1+t_pred)
 
 
+
 # 前処理(原系列)の設定
 tol_sigma_raw_prior = 2.5
-window=30
+window=80
 min_periods=3
 center=True
 
 # 前処理(差分系列)の設定
-tol_sigma_diff_prior = 1.0
+tol_sigma_diff_prior = 2.0
 window_diff=3
 min_periods_diff=1
 center_diff=True
@@ -123,7 +134,7 @@ n_diff = 3
 df_irregularity_small = deepcopy(df_irregularity.iloc[:,target_milage_id_list])
 
 #for milage in list(df_irregularity_small.columns):
-#    plt.plot(df_irregularity_small[milage]);plt.ylim([-5,5]);plt.grid();plt.show()
+#    plt.plot(df_irregularity_small[milage]);plt.ylim([-10,10]);plt.grid();plt.show()
 
 
 
@@ -159,8 +170,7 @@ org_dict["raw0_prior_treated"] = make_data_funcs.priorRawData(df_raw=deepcopy(df
                                                               window=window, min_periods=min_periods, center=center)
 
 
-
-#milage_list = ["m23803", "m23804", "m23805", "m23806"]
+#milage_list = ["m10100", "m10109", "m10116", "m10126"]
 #for milage in milage_list:
 #    plt.plot(org_dict["raw0"][milage])
 #    plt.plot(org_dict["raw0_prior_treated"][milage])
@@ -170,8 +180,10 @@ org_dict["raw0_prior_treated"] = make_data_funcs.priorRawData(df_raw=deepcopy(df
 
 
 # 差分系列の前処理：絶対値がmu+sigma*tol_sigma超過のデータをNaNに変更
-org_dict["diff0"] = make_data_funcs.priorDiffData(df_raw=deepcopy(org_dict["raw0_prior_treated"]), n_diff=n_diff, tol_sigma=tol_sigma_diff_prior, window=window_diff, min_periods=min_periods_diff, center=center_diff)
+org_dict["diff0"] = make_data_funcs.priorDiffData(org_df_raw=org_dict["raw0"], df_raw=deepcopy(org_dict["raw0_prior_treated"]), n_diff=n_diff, tol_sigma=tol_sigma_diff_prior, window=window_diff, min_periods=min_periods_diff, center=center_diff)
     
+
+#milage_list = ["m11843", "m11844"]
 #for milage in milage_list:
 ##    plt.plot(org_dict["raw0"].diff()[milage])
 #    plt.plot(org_dict["diff0"][milage])
@@ -193,6 +205,9 @@ for i in range(n_diff):
 #np.corrcoef(vec_1[tmp],vec_2[tmp])
 #plt.scatter(vec_1,vec_2)
 
+
+
+
 ## 予測モデル作成・逐次予測===============================================================
 print("\n・予測モデル作成・逐次予測 ===============================\n")
 time.sleep(0.5)
@@ -209,11 +224,15 @@ for key in list(org_dict.keys()):
     test_dict[key] = deepcopy(org_dict[key].iloc[test_date_id_list,:])
 
 
+print("オリジナル原系列の訓練データ範囲のデータ数調査\n")
+time.sleep(0.5)
+n_org_train_dict = {}
+for milage in tqdm(list(org_dict["raw0"].columns)):
+    n_org_train_dict[milage] = org_dict["raw0"].iloc[train_date_id_list,:][milage].dropna().shape[0]
 
 ## ARIMA(n_diff,1,0)による逐次予測
-df_pred_raw_lm, maked_model_dict, inspects_dict_dict = ARIMA_funcs.predWithARIMA(org_dict=org_dict, train_dict=train_dict, n_diff=n_diff, start_date_id=start_date_id, t_pred=t_pred, model_name="lm")
-df_pred_raw_mean, _, _ = ARIMA_funcs.predWithARIMA(org_dict=org_dict, train_dict=train_dict, n_diff=n_diff, start_date_id=start_date_id, t_pred=t_pred, model_name="mean")
-
+df_pred_raw_lm, maked_model_dict, inspects_dict_dict = ARIMA_funcs.predWithARIMA(org_dict=org_dict, train_dict=train_dict, n_diff=n_diff, start_date_id=start_date_id, t_pred=t_pred, model_name="lm", n_org_train_dict=n_org_train_dict)
+df_pred_raw_mean, _, _ = ARIMA_funcs.predWithARIMA(org_dict=org_dict, train_dict=train_dict, n_diff=n_diff, start_date_id=start_date_id, t_pred=t_pred, model_name="mean", n_org_train_dict=n_org_train_dict)
 
 
 ### 後処理：予測値と実測値の差分と経過日数の回帰モデルを作成し，予測結果にゲタ履かせ=====================
@@ -233,13 +252,13 @@ print("MAE lm")
 mae_dict_lm = {}
 for milage in list(df_pred_raw_lm.columns):
     mae_dict_lm[milage] = ARIMA_funcs.calcMAE(df_truth=test_dict["raw0"][milage], df_pred=df_pred_raw_lm[milage])
-ARIMA_funcs.plotTotalMAE(mae_dict=mae_dict_lm, ylim=[0.0, 1.0], r_plot_size=1, output_dir=f"ARIMA_C_lm")
+ARIMA_funcs.plotTotalMAE(mae_dict=mae_dict_lm, ylim=[0.0, 1.0], r_plot_size=1, output_dir=f"ARIMA_{{track}}_lm")
 
 print("MAE mean")
 mae_dict_mean = {}
 for milage in list(df_pred_raw_mean.columns):
     mae_dict_mean[milage] = ARIMA_funcs.calcMAE(df_truth=test_dict["raw0"][milage], df_pred=df_pred_raw_mean[milage])
-ARIMA_funcs.plotTotalMAE(mae_dict=mae_dict_mean, ylim=[0.0, 1.0], r_plot_size=1, output_dir=f"ARIMA_C_mean")
+ARIMA_funcs.plotTotalMAE(mae_dict=mae_dict_mean, ylim=[0.0, 1.0], r_plot_size=1, output_dir=f"ARIMA_{{track}}_mean")
 
 
 # lmとmeanのMAEの差分を計算・プロット(-の値の部分でlmが優っている)
@@ -249,8 +268,8 @@ plt.plot(diff_mae, color="red");plt.ylim([-0.1, 0.1]);plt.grid();plt.show()
 
 
 # 結果をプロット
-milage_id_list = range(125,130)
-ylim=[-11,11]
+milage_id_list = range(135,140)
+ylim=[-10,10]
 for milage_id in milage_id_list:
     milage = list(df_pred_raw_lm.columns)[milage_id]
     print(f"\n{milage_id} {milage} ======================================================\n")
@@ -262,11 +281,11 @@ for milage_id in milage_id_list:
         inspects_dict = None
         
     ARIMA_funcs.PlotTruthPred(df_train=train_dict["raw0"][milage], df_truth=test_dict["raw0"][milage], df_pred=df_pred_raw_lm[milage], inspects_dict=inspects_dict, 
-            ylim=ylim, r_plot_size=1,output_dir=f"ARIMA_C_lm", file_name=f"{milage_id}_{milage}")
+            ylim=ylim, r_plot_size=1,output_dir=f"ARIMA_{track}_lm", file_name=f"{milage_id}_{milage}")
     
     print("mean")
     ARIMA_funcs.PlotTruthPred(df_train=train_dict["raw0"][milage], df_truth=test_dict["raw0"][milage], df_pred=df_pred_raw_mean[milage], inspects_dict=inspects_dict, 
-            ylim=ylim, r_plot_size=1,output_dir=f"ARIMA_C_mean", file_name=f"{milage_id}_{milage}")
+            ylim=ylim, r_plot_size=1,output_dir=f"ARIMA_{track}_mean", file_name=f"{milage_id}_{milage}")
         
     
 

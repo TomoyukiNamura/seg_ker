@@ -2,12 +2,16 @@
 # -*- coding: utf-8 -*-
 
 import os
+os.chdir("/Users/tomoyuki/Desktop/keras_test")
+
+import numpy as np
+import matplotlib.pyplot as plt
 import pandas as pd
 from copy import deepcopy
 from tqdm import tqdm
 
 # ファイナライズ対象のフォルダ名
-finalize_folder_name = "20181226"
+finalize_folder_name = "20181227"
 
 
 ## 
@@ -18,8 +22,6 @@ df_index_master.head()
 df_date = pd.read_csv(f"input/date.csv",index_col=0)
 df_date.head()
 
-#df_sumple = pd.read_csv(f"input/sample_submit.csv")
-#df_sumple.shape
 
 result_list = []
 missing_dict = {}
@@ -36,7 +38,6 @@ for alphabet in ["A","B","C","D"]:
         missing_milage_id = int(missing_milage.split("m")[1])
         df_tmp_pred[missing_milage] = deepcopy(df_tmp_pred.loc[:,f"m{missing_milage_id-1}"])
         
-        #df_tmp_pred[missing_milage] = 25
 
     # indexを日付に変更
     df_tmp_pred.index = df_date["date"]
@@ -56,8 +57,13 @@ for alphabet in ["A","B","C","D"]:
 result_list = pd.concat(result_list, axis=0)          
 result_list.index =df_index_master.index
 
-#result_list.shape
-#df_index_master.shape
+
+## 大きくハズレた値がないか調査
+tmp_bool = np.abs(result_list) > 30
+n_upper30 = result_list[tmp_bool].shape[0]
+plt.plot(np.array(result_list));plt.grid();plt.title(f"n_upper30: {n_upper30}")
+plt.savefig(f"output/{finalize_folder_name}/plot_{finalize_folder_name}.jpg");plt.show()
+
 
 # finalizeファイル作成
 result_list.to_csv(f"output/{finalize_folder_name}/finalize_{finalize_folder_name}.csv", index=True, header=False)
@@ -77,3 +83,15 @@ while(is_success==False):
 for track in list(missing_dict.keys()):
     print(f"{track}: {len(missing_dict[track])}")
     
+    
+    
+    
+
+#
+#outlier_id = list(result_list[result_list > 30].index)
+#df_index_master.iloc[outlier_id,:]
+#
+#
+#n_org_train_dict["m11844"]
+    
+
