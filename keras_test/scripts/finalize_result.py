@@ -11,7 +11,7 @@ from copy import deepcopy
 from tqdm import tqdm
 
 # ファイナライズ対象のフォルダ名
-finalize_folder_name = "20181227"
+finalize_folder_name = "20181230"
 
 
 ## 
@@ -70,28 +70,17 @@ result_list.to_csv(f"output/{finalize_folder_name}/finalize_{finalize_folder_nam
 
 # フォルダ名を_finalizedに変更
 is_success = False
-finalize_folder_name_renamed = deepcopy(finalize_folder_name)
+folder_id = 1
 while(is_success==False):
-    if os.path.exists(f"output/{finalize_folder_name_renamed}_finalized")==False:
-        os.rename(f"output/{finalize_folder_name}", f"output/{finalize_folder_name_renamed}_finalized")
+    candidate_folder_name = f"output/{finalize_folder_name}_finalized_{folder_id}"
+    
+    if os.path.exists(candidate_folder_name)==False:
+        os.rename(f"output/{finalize_folder_name}", candidate_folder_name)
         is_success = True
     
     else:
-        finalize_folder_name_renamed = f"{finalize_folder_name_renamed}_a"
+        folder_id += 1
 
 
-for track in list(missing_dict.keys()):
-    print(f"{track}: {len(missing_dict[track])}")
-    
-    
-    
-    
-
-#
-#outlier_id = list(result_list[result_list > 30].index)
-#df_index_master.iloc[outlier_id,:]
-#
-#
-#n_org_train_dict["m11844"]
     
 

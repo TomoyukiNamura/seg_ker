@@ -5,128 +5,79 @@ import os
 import numpy as np
 import pandas as pd
 from copy import deepcopy
-import matplotlib.pyplot as plt
 from tqdm import tqdm
 import time
-from sklearn.metrics import mean_absolute_error
 
-def priorRawData(df_raw, tol_sigma = 2.5, window=7, min_periods=1, center=False, detect_outlier_method = "quantile"):
-    
+
+def priorRawData(df_raw, window, min_periods, center, tol_diff=0.7, tol_n_group=5):
     # 入力した原系列をコピー
     df_result = deepcopy(df_raw)
-     
-    # 差分系列を計算(nan除外)
-    df_tmp_diff = deepcopy(df_raw.rolling(window=5, min_periods=1, center=True).median().dropna().diff().dropna())
     
-#    # メディアンフィルタ前後のプロット
-#    plt.plot(df_result[milage])
-#    plt.plot(df_result.rolling(window=5, min_periods=1, center=True).median()[milage])
-
-    df_is_transition_dict = {}
-    print("変化時期を特定し，各キロ程で変化時期別に移動平均を求める")
-    time.sleep(0.5)
-    for milage in tqdm(list(df_tmp_diff.columns)):
-        # 対象の差分系列を取得
-        tmp_diff = df_tmp_diff[milage]
+    # メディアンフィルタ
+    tmp_raw0_median = df_result.rolling(window=20, min_periods=1, center=True).median()
+    
+    # 10日間の差分
+    tmp_raw0_median_diff = np.abs(tmp_raw0_median.diff(10))
+    
+    # 差分がtol_diffより大きいところを取得
+#    tmp_raw0_median_diff_over_tol_diff = tmp_raw0_median_diff > tol_diff
+    tmp_raw0_median_diff_over_tol_diff = np.logical_or(tmp_raw0_median_diff > tol_diff, tmp_raw0_median_diff.isna())
+    
+    # キロ程別に差分が1より大きいindexを取得
+    for milage in tqdm(list(df_result.columns)):
+        # 10日間の差分がtol_diffより大きいidを取得
+        over_tol_diff_id = pd.Series(list(tmp_raw0_median_diff[milage][tmp_raw0_median_diff_over_tol_diff[milage]].index))
+        over_tol_diff_id = over_tol_diff_id.iloc[range(10,over_tol_diff_id.shape[0])].reset_index(drop=True)        
+        
+        # indexが連続しているところでグループ化
+        tmp_diff = over_tol_diff_id.diff()
+        tmp_diff[0] = 0.0
+        
+        group_list = []
+        tmp_group_list = []
+        for i in range(over_tol_diff_id.shape[0]):
+            if tmp_diff[i] != 1.0 and i!=0:
+                group_list.append(tmp_group_list)
+                tmp_group_list = []
+            tmp_group_list.append(over_tol_diff_id[i])
+        group_list.append(tmp_group_list)
+        
+        
+        # 変位点を取得（グループ内のデータ数がtol_n_groupより大きいもののみ）
+        displacement_point_list = []
+        for i in range(len(group_list)):
+            if len(group_list[i]) >= tol_n_group:
+                displacement_point_list.append(group_list[i][0])
                 
-        if detect_outlier_method == "mean_sigma":
-            # 差分系列の平均，標準偏差を取得
-            mu = np.mean(tmp_diff)
-            sigma = np.std(tmp_diff)
-            
-            # 差分系列の絶対値がmu+sigma*tol_sigmaを超過しているデータを外れ値とみなす
-            is_outlier = np.abs(tmp_diff)>mu+sigma*tol_sigma
-            
-        elif detect_outlier_method == "quantile":
-            # 25%点，75％点を計算
-            Q3 = tmp_diff.quantile(.75)
-            Q1 = tmp_diff.quantile(.25)
-            
-            # 4分位範囲計算
-            quantile_range = (Q3 - Q1) * tol_sigma
-            
-            # Q1-4分位範囲未満，またはQ3+4分位範囲超過のデータを外れ値とする
-            is_lower_outlier = tmp_diff < Q1-quantile_range
-            is_upper_outlier = tmp_diff > Q3+quantile_range
-            is_outlier = np.logical_or(is_lower_outlier, is_upper_outlier)
-            
+                
+        # 変位点前後のデータの足並みを揃える
+        displacement_point_list.insert(0, 0)
+        displacement_point_list.append(max(list(df_result[milage].index)))
         
-        # 外れ値としたデータのindexを保存
-        df_is_transition_dict[milage] = list(df_tmp_diff[milage].index[is_outlier])
-
-
-    print("各キロ程で変化時期をスケールを合わせて結合し，移動平均を求める")
-    time.sleep(0.5)
-    for milage in tqdm(list(df_tmp_diff.columns)):
-        # 対象の原系列取得
-        tmp_raw = deepcopy(df_result.loc[:,[milage]])
-        
-#        plt.plot(tmp_raw);plt.ylim([-5.5, -1.0]);plt.grid()
-        
-        # 対象の原系列の変化情報を取得
-        tmp_transition_id = deepcopy(df_is_transition_dict[milage])
-        tmp_transition_id.insert(0, 0)
-        tmp_transition_id.append(max(list(tmp_raw.index)))
-        
-        # グループを調査し，NaNだけのグループがあれば除外
-        remove_list = []
-        for i in range(len(tmp_transition_id)-1):
-            tmp_raw_local = tmp_raw.iloc[range(tmp_transition_id[i], tmp_transition_id[i+1]),:]
+        tmp_raw = df_result.loc[:,[milage]]
             
-            if tmp_raw_local.isna().all()[milage]:
-                remove_list.append(tmp_transition_id[i])
-
-        for remove_id in remove_list:
-            tmp_transition_id.remove(remove_id)
-        
-        # 変化時期をスケールを合わせて結合
-        for i in range(len(tmp_transition_id)-2):
+        for i in range(len(displacement_point_list)-2):
             # グループ1,2を取得
-            tmp_raw_local_1 = tmp_raw.iloc[range(tmp_transition_id[i], tmp_transition_id[i+1]),:]
-            tmp_raw_local_2 = tmp_raw.iloc[range(tmp_transition_id[i+1], tmp_transition_id[i+2]),:]
+            tmp_raw_local_1 = tmp_raw.iloc[range(displacement_point_list[i], displacement_point_list[i+1]),:]
+            tmp_raw_local_2 = tmp_raw.iloc[range(displacement_point_list[i+1], displacement_point_list[i+2]),:]
+            
+            if len(tmp_raw_local_1.dropna())!=0 and len(tmp_raw_local_2.dropna())!=0:
+                
+                # グループ1の末尾3平均，グループ2の先頭3平均を算出
+                mean_1 = float(np.median(tmp_raw_local_1.dropna().tail(20)))
+                mean_2 = float(np.median(tmp_raw_local_2.dropna().head(20)))
+                            
+                # 平均差をグループ2に足し，保存
+                tmp_raw.iloc[range(displacement_point_list[i+1], displacement_point_list[i+2]),:] = (mean_1 - mean_2) + tmp_raw_local_2
         
-            # グループ1の末尾3平均，グループ2の先頭3平均を算出
-            mean_1 = float(np.mean(tmp_raw_local_1.dropna().tail(10)))
-            mean_2 = float(np.mean(tmp_raw_local_2.dropna().head(10)))
-                        
-            # 平均差をグループ2に足し，保存
-            tmp_raw.iloc[range(tmp_transition_id[i+1], tmp_transition_id[i+2]),:] = (mean_1 - mean_2) + tmp_raw_local_2
-        
-#        plt.plot(tmp_raw);plt.ylim([-5.5, -1.0]);plt.grid();plt.show()
-        
-        # 移動平均実施
-        tmp_raw = tmp_raw.rolling(window=window, min_periods=min_periods, center=center).mean()
-        #tmp_raw = tmp_raw.ewm(span=window, min_periods=min_periods).mean()
-        
-#        # グループごとに移動平均を取得
-#        for i in range(len(tmp_transition_id)-1):
-#            tmp_raw_local = tmp_raw.iloc[range(tmp_transition_id[i], tmp_transition_id[i+1]),:]
-#            tmp_raw.iloc[range(tmp_transition_id[i], tmp_transition_id[i+1]),:] = tmp_raw_local.rolling(window=window, min_periods=min_periods, center=center).mean()
-#                        
         # 移動平均結果を代入
-        df_result.loc[:,[milage]] = tmp_raw    
+        df_result.loc[:,[milage]] = tmp_raw
     
-#    print("各キロ程で変化時期別に移動平均を求める")
-#    time.sleep(0.5)
-#    for milage in tqdm(list(df_tmp_diff.columns)):
-#        # 対象の原系列取得
-#        tmp_raw = df_result.loc[:,[milage]]
-#        
-#        # 対象の原系列の変化情報を取得し，先頭に0，末尾にindexの最大値を置く
-#        tmp_transition_id = deepcopy(df_is_transition_dict[milage])
-#        tmp_transition_id.insert(0, 0)
-#        tmp_transition_id.append(max(list(tmp_raw.index)))
-#        
-#        # グループごとに移動平均を取得
-#        for i in range(len(tmp_transition_id)-1):
-#            tmp_raw_local = tmp_raw.iloc[range(tmp_transition_id[i], tmp_transition_id[i+1]),:]
-#            tmp_raw.iloc[range(tmp_transition_id[i], tmp_transition_id[i+1]),:] = tmp_raw_local.rolling(window=window, min_periods=min_periods, center=center).mean()
-#                        
-#        # 移動平均結果を代入
-#        df_result.loc[:,[milage]] = tmp_raw
-      
-    return df_result
-
+    # メディアンフィルタ
+    df_result = df_result.rolling(window=20, min_periods=1, center=True).median()
+    df_result = df_result.rolling(window=window, min_periods=min_periods, center=center).mean()
+    
+    return df_result, tmp_raw0_median, tmp_raw0_median_diff
 
 def priorDiffData(org_df_raw, df_raw, n_diff, tol_sigma, window=7, min_periods=1, center=False):
     

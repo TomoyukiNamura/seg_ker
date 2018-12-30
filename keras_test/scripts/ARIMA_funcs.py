@@ -95,23 +95,29 @@ def recursivePredARIMA(model, start_diff, start_raw, t_pred):
     return pred_raw_list
 
 
+def predOnlyStart(start_median, t_pred):
+    pred_raw_list = []
+    for i in range(t_pred):
+        pred_raw_list.append(start_median)
+    return pred_raw_list
+        
+
 def predWithARIMA(org_dict, train_dict, n_diff, start_date_id, t_pred, model_name, n_org_train_dict):
         
     df_pred_raw = []
     maked_model_dict = {}
     inspects_dict_dict = {}
+    start_raw_dict = {}
     
     for milage in tqdm(list(train_dict["raw0"].columns)):
         
-        # 直近10日間平均を原系列初期値に設定(直近10日にデータがない場合，過去5日分データを初期値に利用)
-        start_vector = org_dict["raw0"].loc[range(start_date_id-5,start_date_id),milage].dropna()
-        if start_vector.shape[0]==0:
-             start_vector = org_dict["raw0"].loc[range(start_date_id),milage].dropna().tail(5)
-        start_mean = np.mean(np.array(start_vector))
+        # nan除く過去5日分中央値を初期値とする
+        start_vector = org_dict["raw0"].loc[range(start_date_id+1),milage].dropna().tail(5)
+        start_median = np.median(np.array(start_vector))
+        start_raw_dict[milage] = deepcopy(start_median)
         
         # 訓練データ作成
         y, X = dfDict2ARIMAInput(df_dict=train_dict, n_diff=n_diff, milage=milage)
-#        X = np.array([0])
         
         # モデル学習・逐次予測(訓練データ数が30以上，かつ訓練期間の原系列数が30以上のものに限りモデル作成)
         if X.shape[0] >= 30 and n_org_train_dict[milage] >= 30 :
@@ -123,11 +129,9 @@ def predWithARIMA(org_dict, train_dict, n_diff, start_date_id, t_pred, model_nam
                 
                 model = lm()
                 model.fit(X=X, y=y)
-                #maked_model_dict[milage] = model
                 
                 # 逐次予測
-                pred_raw_list = recursivePredARIMA(model=model, start_diff=start_diff, start_raw=np.reshape(np.array(start_mean), (1,1)), t_pred=t_pred)
-    #            pred_raw_list = recursivePredARIMA(model=model_lm, start_diff=start_diff, start_raw=start_raw, t_pred=t_pred)
+                pred_raw_list = recursivePredARIMA(model=model, start_diff=start_diff, start_raw=np.reshape(np.array(start_median), (1,1)), t_pred=t_pred)
                 
             elif model_name=="SVR":
                 # 初期値データ作成
@@ -137,38 +141,27 @@ def predWithARIMA(org_dict, train_dict, n_diff, start_date_id, t_pred, model_nam
                 
                 model = SVR(kernel="linear", C=10, epsilon=0.8)
                 model.fit(X=X, y=y)
-                #maked_model_dict[milage] = model
                 
                 # 逐次予測
-#                start_mean = np.array(np.mean(np.array(org_dict["raw0"].loc[range(start_date_id-10,start_date_id),milage].dropna())))
-#                start_mean = np.reshape(start_mean, (1,1))
-                pred_raw_list = recursivePredARIMA(model=model, start_diff=start_diff, start_raw=np.reshape(np.array(start_mean), (1,1)), t_pred=t_pred)
-    #            pred_raw_list = recursivePredARIMA(model=model_lm, start_diff=start_diff, start_raw=start_raw, t_pred=t_pred)
+                pred_raw_list = recursivePredARIMA(model=model, start_diff=start_diff, start_raw=np.reshape(np.array(start_median), (1,1)), t_pred=t_pred)
             
             else:
-                # 直近10日平均値で逐次予測
-                pred_raw_list = []
-                for i in range(t_pred):
-                    pred_raw_list.append(start_mean)
-                    
+                # 初期値のみで予測
+                pred_raw_list = predOnlyStart(start_median, t_pred)
                 inspects_dict_dict[milage] = None
                     
         else:
-            # 直近10日平均値で逐次予測
-            pred_raw_list = []
-            for i in range(t_pred):
-                pred_raw_list.append(start_mean)
-                
+            # 初期値のみで予測
+            #print("訓練データ数が30未満，または訓練期間の原系列数が30未満")
+            pred_raw_list = predOnlyStart(start_median, t_pred)
             inspects_dict_dict[milage] = None
             
-        ## 予測結果絶対値が30を超過する場合，平均値に置き換え
-        if any(np.abs(pred_raw_list) > 30):
-            # 直近10日平均値で逐次予測
-            pred_raw_list = []
-            for i in range(t_pred):
-                pred_raw_list.append(start_mean)
-                
-            inspects_dict_dict[milage] = None
+#        ## 予測結果絶対値が30を超過する場合，平均値に置き換え
+#        if any(np.abs(pred_raw_list) > 30):
+#            # 初期値のみで予測
+#            print("予測結果絶対値が30を超過")
+#            pred_raw_list = predOnlyStart(start_median, t_pred)
+#            inspects_dict_dict[milage] = None
             
         
         df_pred_raw.append(pd.DataFrame({milage:pred_raw_list}))
@@ -176,7 +169,7 @@ def predWithARIMA(org_dict, train_dict, n_diff, start_date_id, t_pred, model_nam
     df_pred_raw = pd.concat(df_pred_raw, axis=1)
     df_pred_raw.index = pd.RangeIndex(start=start_date_id+1, stop=start_date_id+1+t_pred, step=1)
     
-    return df_pred_raw, maked_model_dict, inspects_dict_dict
+    return df_pred_raw, start_raw_dict, maked_model_dict, inspects_dict_dict
 
 
 
@@ -185,7 +178,10 @@ def predWithARIMA(org_dict, train_dict, n_diff, start_date_id, t_pred, model_nam
 # MAE計算
 def calcMAE(df_truth, df_pred):
     tmp_bool = df_truth.isna() == False
-    mae = mean_absolute_error(y_true=df_truth[tmp_bool], y_pred=df_pred[tmp_bool])
+    if np.any(tmp_bool)==True:
+        mae = mean_absolute_error(y_true=df_truth[tmp_bool], y_pred=df_pred[tmp_bool])
+    else:
+        mae = np.nan
     return mae
 
 def PlotTruthPred(df_train, df_truth, df_pred, inspects_dict=None, ylim=None, r_plot_size=1, output_dir=None, file_name=""):
@@ -226,6 +222,7 @@ def PlotTruthPred(df_train, df_truth, df_pred, inspects_dict=None, ylim=None, r_
 def plotTotalMAE(mae_dict, ylim=None, r_plot_size=1, output_dir=None):
         
     mae_vector = np.array(list(mae_dict.values()))
+    mae_vector = mae_vector[~np.isnan(mae_vector)]
     
     plt.rcParams["font.size"] = 10*r_plot_size
     plt.rcParams['figure.figsize'] = [6.0*r_plot_size, 4.0*r_plot_size]
@@ -245,68 +242,61 @@ def plotTotalMAE(mae_dict, ylim=None, r_plot_size=1, output_dir=None):
     
     
 
-def postTreat(df_pred_raw, posterior_start_date_id_list, model_name_post, model_name_pred, org_dict, train_dict, n_diff, t_pred):
+def postTreat(df_pred_raw, start_raw_dict, t_pred, tol=20):
     # 後処理前のデータをコピー
     df_pred_raw_post = deepcopy(df_pred_raw)
     
-    # 後処理用データ取得
-    posterior_raw_truth_list = []
-    posterior_raw_pred_list = []
+    # キロ程リスト取得
+    milage_list = list(df_pred_raw_post.columns)
     
-    for posterior_start_date_id in posterior_start_date_id_list:
-        # 実測値の取得
-        posterior_date_id_list = range(posterior_start_date_id+1, posterior_start_date_id+1+t_pred)
-        posterior_raw_truth_list.append(deepcopy(org_dict["raw0_prior_treated"].iloc[posterior_date_id_list,:]))
+    # 予測結果絶対値がtol以上のものを抽出
+    over_tol = (np.abs(df_pred_raw_post) >= tol).any(axis=0)
         
-        # 予測値計算
-        posterior_raw_pred,_,_ = predWithARIMA(org_dict=org_dict, train_dict=train_dict, n_diff=n_diff, start_date_id=posterior_start_date_id, t_pred=t_pred, model_name=model_name_pred)    
-        posterior_raw_pred_list.append(deepcopy(posterior_raw_pred))
-    
-    
-    
-    
-    # 後処理用モデル（説：経過日数，目：実測値-予測値）
-    model_prior_dict = {}
-    for milage in list(posterior_raw_pred.columns):
+    for milage_id in tqdm(range(len(milage_list))):
+        milage = milage_list[milage_id]
+        target_start = start_raw_dict[milage]
         
-        df_X_y = []
-        for i in range(len(posterior_raw_truth_list)):
-            # 実測値-予測値　取得
-            tmp_truth = posterior_raw_truth_list[i].loc[:,[milage]]
-            tmp_pred  = posterior_raw_pred_list[i].loc[:,[milage]]
-            tmp_diff_truth_pred = tmp_truth - tmp_pred
+        if over_tol[milage]:
+            # となりのキロ程を取得
+            if milage_id==0:
+                next_milage_list = [milage_list[milage_id+1]]
+            elif milage_id==(len(milage_list)-1):
+                next_milage_list = [milage_list[milage_id-1]]
+            else:
+                next_milage_list = [milage_list[milage_id-1], milage_list[milage_id+1]]
+            
+            # となりのキロ程にover_tol==Falseがあるかチェック
+            tmp_not_over_tol = over_tol[next_milage_list]==False
+            donor_milage_list = list(tmp_not_over_tol[tmp_not_over_tol].index)
+            
+            if len(donor_milage_list)==2:
+                # 前後いずれもある場合，前後の予測結果の平均値+(ターゲットの初期値-前後の初期値の平均値)で修正
+                front_pred = deepcopy(df_pred_raw_post.loc[:,donor_milage_list[0]])
+                front_start = start_raw_dict[donor_milage_list[0]]
                 
-            # 経過日数　取得
-            elapsed_days = pd.DataFrame({"elapsed_days":range(tmp_diff_truth_pred.shape[0])})
-            elapsed_days.index = tmp_diff_truth_pred.index
-            tmp_diff_truth_pred = pd.concat([elapsed_days, tmp_diff_truth_pred], axis=1)
+                back_pred = deepcopy(df_pred_raw_post.loc[:,donor_milage_list[1]])
+                back_start = start_raw_dict[donor_milage_list[1]]
+                
+                donor_pred = (front_pred + back_pred) / 2.0
+                donor_start = (front_start + back_start) / 2.0
+                
+                modified_pred = donor_pred + (target_start - donor_start)
+                
+                
+            elif len(donor_milage_list)==1:
+                # 片一方の場合，ドナーの予測結果+(ターゲットの初期値-ドナーの初期値)で修正
+                donor_pred = deepcopy(df_pred_raw_post.loc[:,donor_milage_list[0]])
+                donor_start = start_raw_dict[donor_milage_list[0]]
+                
+                modified_pred = donor_pred + (target_start - donor_start)
             
-            tmp_diff_truth_pred.index = pd.RangeIndex(start=0,stop=tmp_diff_truth_pred.shape[0],step=1)
-            df_X_y.append(deepcopy(tmp_diff_truth_pred))
-        
-        df_X_y = pd.concat(df_X_y, axis=0).dropna()
+            else:
+                # 前後共ない場合，初期値のみで予測結果を修正
+                modified_pred = predOnlyStart(start_raw_dict[milage], t_pred)
             
-        # 訓練データ作成
-        X = np.array(df_X_y.loc[:,["elapsed_days"]])
-        y = np.array(df_X_y.loc[:,[milage]])
-        
-        # 後処理モデル作成
-        if model_name_post == "lm":
-            model_post = lm()
+            # 予測結果を修正
+            modified_pred = pd.Series(modified_pred)
+            modified_pred.index = df_pred_raw_post[milage].index
+            df_pred_raw_post[milage] = modified_pred
             
-        elif model_name_post == "knn":
-            model_post = knn(n_neighbors=10)
-            
-        else:
-            model_post = lm()
-        
-        model_prior_dict[milage] = model_post.fit(X=X, y=y)
-    
-        # 予測結果にゲタ履かせ
-        X_pred = np.reshape(np.array(range(t_pred)), (t_pred, 1))
-        inflate_series = pd.DataFrame(model_post.predict(X_pred))[0]
-        inflate_series.index = df_pred_raw_post.loc[:,milage].index
-        
-        df_pred_raw_post.loc[:,milage] = df_pred_raw_post.loc[:,milage] + inflate_series
-        
-    return df_pred_raw_post
+    return df_pred_raw_post, over_tol
