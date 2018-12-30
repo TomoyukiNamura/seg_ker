@@ -31,7 +31,7 @@ makeNewFolder(output_pass)
 
 
 # データ読み込み
-track = "C"
+track = "B"
 file_name = f"track_{track}.csv"
 df_track = pd.read_csv(f"input/{file_name}")
 df_track.head()
@@ -81,14 +81,17 @@ if track=="A":
     train_date_id_list = list(range(0, 200)) # track A
     
 elif track=="B":
-    train_date_id_list = list(range(0, 280)) # track B
+    #train_date_id_list = list(range(0, 280)) # track B
+    train_date_id_list = list(range(300,360))
+    #train_date_id_list = list(range(150, 280))
     
 elif track=="C":
     #train_date_id_list = list(range(0, 220)) # track C
     train_date_id_list = list(range(280, 365)) # track C
     
 elif track=="D":
-    train_date_id_list = list(range(0, 250)) # track D
+#    train_date_id_list = list(range(0, 250)) # track D
+    train_date_id_list = list(range(140, 240))
 
 
 # 前処理(原系列)の設定
@@ -167,7 +170,8 @@ df_pred_raw, over_tol = ARIMA_funcs.postTreat(df_pred_raw=df_pred_raw, start_raw
 # 予測結果を保存
 df_pred_raw.to_csv(f"{output_pass}/pred_{file_name}",index=False)
 
-    
+   
+
 
 ## 動画用データ保存 =================================================== 
 folder_name = "pred_result_movie_honban"
@@ -184,3 +188,4 @@ makeNewFolder(f"{output_pass}/{track}")
 shutil.copyfile("scripts/honban.py", f"{output_pass}/{track}/honban.py")
 shutil.copyfile("scripts/ARIMA_funcs.py", f"{output_pass}/{track}/ARIMA_funcs.py")
 shutil.copyfile("scripts/make_data_funcs.py", f"{output_pass}/{track}/make_data_funcs.py")
+

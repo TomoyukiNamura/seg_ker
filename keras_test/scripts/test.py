@@ -12,6 +12,7 @@ from datetime import datetime
 from copy import deepcopy
 from tqdm import tqdm
 import time
+import shutil
 from sklearn.linear_model import LinearRegression as lm
 from sklearn.neighbors import KNeighborsRegressor as knn
 
@@ -39,7 +40,7 @@ def makeNewFolder(folder_name):
 
 
 # データ読み込み
-track = "D"
+track = "B"
 file_name = f"track_{track}.csv"
 df_track = pd.read_csv(f"input/{file_name}")
 df_track.head()
@@ -70,9 +71,9 @@ df_irregularity.shape
 
 ## スモールデータ =====================================
 # 訓練データ，評価データの設定
-#target_milage_id_list = range(6935,6945)
+target_milage_id_list = range(6935,6945)
 #target_milage_id_list = range(6900,6970)
-target_milage_id_list = range(6800,7200)
+#target_milage_id_list = range(6800,7200)
 #target_milage_id_list = range(6970,7100)
 #target_milage_id_list = range(1700,1730)#1723
 #target_milage_id_list = range(8700,8750)#1723
@@ -85,7 +86,8 @@ if track=="A":
 elif track=="B":
     t_pred = 41#91
     start_date_id=5
-    train_date_id_list = range(100,270)
+    #train_date_id_list = range(100,270)
+    train_date_id_list = range(300,360)
     
 elif track=="C":
     t_pred = 41#91
@@ -95,8 +97,9 @@ elif track=="C":
     
 elif track=="D":
     t_pred = 41#91
-    start_date_id=150
-    train_date_id_list = range(0,150)
+    start_date_id=10
+#    train_date_id_list = range(0,150)
+    train_date_id_list = range(140, 240)
 
 test_date_id_list = range(start_date_id+1, start_date_id+1+t_pred)
 
