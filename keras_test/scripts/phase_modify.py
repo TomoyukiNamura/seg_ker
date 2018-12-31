@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+
+
+import os
+os.chdir("/Users/tomoyuki/Desktop/keras_test")
+
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+from datetime import datetime
+from copy import deepcopy
+from tqdm import tqdm
+import time
+import shutil
+
+
+
+## 出力フォルダ作成
+def makeNewFolder(folder_name):
+    if os.path.exists(folder_name)==False:
+        os.mkdir(folder_name)
+        return True
+    else:
+        return False
+    
+output_pass = f'phase_modified'
+makeNewFolder(output_pass)
+
+
+# データ読み込み
+track = "A"
+file_name = f"track_{track}.csv"
+df_track = pd.read_csv(f"input/{file_name}")
+df_track.head()
+
+
+columns = "高低左"
+df_irregularity = []
+milage_list = list(df_track.loc[:,"キロ程"].unique())
+
+print("行：日付id, 列：キロ程　のデータ作成")
+time.sleep(0.5)
+for milage in tqdm(milage_list):
+    # 対象キロ程のデータを取得
+    tmp_df = df_track[df_track.loc[:,"キロ程"]==milage].loc[:,[columns]]
+    
+    # インデックスを初期化
+    tmp_df = tmp_df.reset_index(drop=True)
+    
+    # リネームしてアペンド
+    df_irregularity.append(tmp_df.rename(columns={columns: f"m{milage}"}))
+
+df_irregularity = pd.concat(df_irregularity, axis=1)
+df_irregularity.head
+df_irregularity.tail
+df_irregularity.shape

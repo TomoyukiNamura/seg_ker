@@ -110,6 +110,11 @@ model_name_pred = "lm"     #"SVR"
 n_diff = 3
 
 
+## 後処理(予測結果修正)の設定
+tol_abnormal_max_min = 2.5
+tol_abnormal_upper = 25
+tol_abnormal_lower = -25
+
 
 
 ## 前処理 ==================================================================================
@@ -162,7 +167,7 @@ df_pred_raw.loc[:,tmp]
 
 folder_name = "pred_result_movie_honban"
 makeNewFolder(folder_name)
-org_dict["raw0"].loc[:,tmp].to_csv(f"{folder_name}/raw0_over_tol.csv",index=False,header=True)
+train_dict["raw0"].loc[:,tmp].to_csv(f"{folder_name}/train_over_tol.csv",index=True,header=True)
 df_pred_raw.loc[:,tmp].to_csv(f"{folder_name}/pred_ARIMA_over_tol.csv",index=True,header=True)
 
 
@@ -170,16 +175,27 @@ df_pred_raw.loc[:,tmp].to_csv(f"{folder_name}/pred_ARIMA_over_tol.csv",index=Tru
 ## 後処理 ==================================================================================
 print("\n・後処理 ===============================")
 time.sleep(0.5)
-df_pred_raw, over_tol = ARIMA_funcs.postTreat(df_pred_raw=df_pred_raw, start_raw_dict=start_raw_dict, t_pred=t_pred+lag_t, tol=19)
-df_pred_raw = df_pred_raw.iloc[range(lag_t, t_pred+lag_t),:]
+abnormal_total, diagnosis_result = ARIMA_funcs.diagnosePredResult(df_pred=deepcopy(df_pred_raw), df_train=deepcopy(train_dict["raw0_prior_treated"]), tol_abnormal_max_min = tol_abnormal_max_min, tol_abnormal_upper = tol_abnormal_upper, tol_abnormal_lower = tol_abnormal_lower)
 
+folder_name = "pred_result_movie_honban"
+makeNewFolder(folder_name)
+train_dict["raw0"].loc[:,abnormal_total].to_csv(f"{folder_name}/train_over_tol.csv",index=True,header=True)
+df_pred_raw.loc[:,abnormal_total].to_csv(f"{folder_name}/pred_ARIMA_over_tol.csv",index=True,header=True)
+
+df_pred_raw = ARIMA_funcs.postTreat(df_pred_raw=df_pred_raw, abnormal_total=abnormal_total, start_raw_dict=start_raw_dict, t_pred=t_pred+lag_t)
+df_pred_raw = df_pred_raw.iloc[range(lag_t, t_pred+lag_t),:]
 
 
 ## 結果 =============================================================
 # 予測結果を保存
 df_pred_raw.to_csv(f"{output_pass}/pred_{file_name}",index=False)
 
-   
+# cfgファイルをoutputにコピー
+makeNewFolder(f"{output_pass}/{track}")
+shutil.copyfile("scripts/honban.py", f"{output_pass}/{track}/honban.py")
+shutil.copyfile("scripts/ARIMA_funcs.py", f"{output_pass}/{track}/ARIMA_funcs.py")
+shutil.copyfile("scripts/make_data_funcs.py", f"{output_pass}/{track}/make_data_funcs.py")
+
 
 
 ## 動画用データ保存 =================================================== 
@@ -188,13 +204,8 @@ makeNewFolder(folder_name)
 org_dict["raw0"].to_csv(f"{folder_name}/raw0.csv",index=False,header=True)
 org_dict["raw0_prior_treated"].to_csv(f"{folder_name}/raw0_prior_treated.csv",index=False,header=True)
 train_dict["raw0"].to_csv(f"{folder_name}/train.csv",index=True,header=True)
+train_dict["raw0_prior_treated"].to_csv(f"{folder_name}/train_prior_treated.csv",index=True,header=True)
 df_pred_raw.to_csv(f"{folder_name}/pred_ARIMA.csv",index=True,header=True)
 
 
-
-# cfgファイルをoutputにコピー
-makeNewFolder(f"{output_pass}/{track}")
-shutil.copyfile("scripts/honban.py", f"{output_pass}/{track}/honban.py")
-shutil.copyfile("scripts/ARIMA_funcs.py", f"{output_pass}/{track}/ARIMA_funcs.py")
-shutil.copyfile("scripts/make_data_funcs.py", f"{output_pass}/{track}/make_data_funcs.py")
 
