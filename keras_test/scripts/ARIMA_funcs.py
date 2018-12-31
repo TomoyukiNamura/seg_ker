@@ -120,7 +120,7 @@ def predWithARIMA(org_dict, train_dict, n_diff, start_date_id, t_pred, model_nam
         y, X = dfDict2ARIMAInput(df_dict=train_dict, n_diff=n_diff, milage=milage)
         
         # モデル学習・逐次予測(訓練データ数が30以上，かつ訓練期間の原系列数が30以上のものに限りモデル作成)
-        if X.shape[0] >= 30 and n_org_train_dict[milage] >= 10 :
+        if X.shape[0] >= 30 and n_org_train_dict[milage] >= 30 :
             if model_name=="lm":
                 # 初期値データ作成
                 start_raw, start_diff, start_values_result = dfDict2ARIMAInit(df_dict=org_dict, n_diff=n_diff, milage=milage, start_date_id=start_date_id)

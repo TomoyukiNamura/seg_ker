@@ -55,6 +55,7 @@ for milage in tqdm(milage_list):
 
 df_irregularity = pd.concat(df_irregularity, axis=1)
 df_irregularity.head
+df_irregularity.tail
 df_irregularity.shape
 
 
@@ -68,30 +69,28 @@ df_irregularity.shape
 
 
 ## 設定 ===========================================================
-# 予測対象キロ程，予測期間
-target_milage_id_list = range(df_irregularity.shape[1])   # 原則変更しない
-t_pred = 91  # 原則変更しない
-start_date_id=df_irregularity.shape[0]-1 # start_date_id日目の原系列，差分系列を初期値とする＝＞start_date_id+1日目から予測
-
 # 訓練期間
-#train_date_id_list = list(range(0, 50))
-#train_date_id_list.extend(list(range(100,190)))
-
 if track=="A":
     train_date_id_list = list(range(0, 200)) # track A
+    lag_t = 0
     
 elif track=="B":
-    #train_date_id_list = list(range(0, 280)) # track B
-    train_date_id_list = list(range(300,360))
-    #train_date_id_list = list(range(150, 280))
+    train_date_id_list = list(range(100,280))
+    lag_t = 12
     
 elif track=="C":
-    #train_date_id_list = list(range(0, 220)) # track C
     train_date_id_list = list(range(280, 365)) # track C
+    lag_t = 0
     
 elif track=="D":
-#    train_date_id_list = list(range(0, 250)) # track D
     train_date_id_list = list(range(140, 240))
+    lag_t = 0
+
+
+# 予測対象キロ程，予測期間
+target_milage_id_list = range(df_irregularity.shape[1])   # 変更しない
+t_pred = 91  # 変更しない
+start_date_id=df_irregularity.shape[0] -1 -lag_t # start_date_id日目の原系列，差分系列を初期値とする＝＞start_date_id+1日目から予測
 
 
 # 前処理(原系列)の設定
@@ -153,16 +152,26 @@ for milage in tqdm(list(org_dict["raw0"].columns)):
 ## 逐次予測
 print("\n・予測モデル作成・逐次予測 ===============================")
 time.sleep(0.5)
-df_pred_raw, start_raw_dict, maked_model_dict, inspects_dict_dict = ARIMA_funcs.predWithARIMA(org_dict=org_dict, train_dict=train_dict, n_diff=n_diff, start_date_id=start_date_id, t_pred=t_pred, model_name=model_name_pred, n_org_train_dict=n_org_train_dict)
+df_pred_raw, start_raw_dict, maked_model_dict, inspects_dict_dict = ARIMA_funcs.predWithARIMA(org_dict=org_dict, train_dict=train_dict, n_diff=n_diff, start_date_id=start_date_id, t_pred=t_pred+lag_t, model_name=model_name_pred, n_org_train_dict=n_org_train_dict)
+
+
+# 絶対値20越えの結果を保存
+tmp = (np.abs(df_pred_raw) > 20).any(axis=0)
+len(tmp[tmp])
+df_pred_raw.loc[:,tmp]
+
+folder_name = "pred_result_movie_honban"
+makeNewFolder(folder_name)
+org_dict["raw0"].loc[:,tmp].to_csv(f"{folder_name}/raw0_over_tol.csv",index=False,header=True)
+df_pred_raw.loc[:,tmp].to_csv(f"{folder_name}/pred_ARIMA_over_tol.csv",index=True,header=True)
 
 
 
 ## 後処理 ==================================================================================
 print("\n・後処理 ===============================")
 time.sleep(0.5)
-df_pred_raw, over_tol = ARIMA_funcs.postTreat(df_pred_raw=df_pred_raw, start_raw_dict=start_raw_dict, t_pred=t_pred, tol=20)
-
-
+df_pred_raw, over_tol = ARIMA_funcs.postTreat(df_pred_raw=df_pred_raw, start_raw_dict=start_raw_dict, t_pred=t_pred+lag_t, tol=19)
+df_pred_raw = df_pred_raw.iloc[range(lag_t, t_pred+lag_t),:]
 
 
 

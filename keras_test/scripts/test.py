@@ -64,6 +64,7 @@ for milage in tqdm(milage_list):
 
 df_irregularity = pd.concat(df_irregularity, axis=1)
 df_irregularity.head
+df_irregularity.tail
 df_irregularity.shape
 
 
@@ -71,37 +72,47 @@ df_irregularity.shape
 
 ## スモールデータ =====================================
 # 訓練データ，評価データの設定
-target_milage_id_list = range(6935,6945)
+#target_milage_id_list = range(6935,6945)
 #target_milage_id_list = range(6900,6970)
 #target_milage_id_list = range(6800,7200)
 #target_milage_id_list = range(6970,7100)
 #target_milage_id_list = range(1700,1730)#1723
-#target_milage_id_list = range(8700,8750)#1723
+target_milage_id_list = range(8580,8600)#1723
+
 
 if track=="A":
     t_pred = 41#91
-    start_date_id=150                 # start_date_id日目の原系列，差分系列を初期値とする＝＞start_date_id+1日目から予測
-    train_date_id_list = range(0,150)
+    start_date_id=150  # start_date_id日目の原系列，差分系列を初期値とする＝＞start_date_id+1日目から予測
+    train_date_id_list = list(range(0, 200)) # track A
+    lag_t = 0
     
 elif track=="B":
     t_pred = 41#91
-    start_date_id=5
-    #train_date_id_list = range(100,270)
-    train_date_id_list = range(300,360)
+    start_date_id=100
+    #train_date_id_list = list(range(0, 280)) # track B
+    #train_date_id_list = list(range(300,360))
+    train_date_id_list = list(range(0,100))
+    #train_date_id_list = list(range(150, 280))
+    lag_t = 12
+    t_pred = 91
+    
     
 elif track=="C":
     t_pred = 41#91
     start_date_id=150
-    #train_date_id_list = range(0,150)
-    train_date_id_list = list(range(280, 365))
+    #train_date_id_list = list(range(0, 220)) # track C
+    train_date_id_list = list(range(280, 365)) # track C
+    lag_t = 0
     
 elif track=="D":
     t_pred = 41#91
     start_date_id=10
-#    train_date_id_list = range(0,150)
-    train_date_id_list = range(140, 240)
+#    train_date_id_list = list(range(0, 250)) # track D
+    train_date_id_list = list(range(140, 240))
+    lag_t = 0
 
-test_date_id_list = range(start_date_id+1, start_date_id+1+t_pred)
+start_date_id = start_date_id -1 - lag_t
+test_date_id_list = range(start_date_id+1+lag_t, start_date_id+1+lag_t+t_pred)
 
 
 
@@ -219,12 +230,6 @@ for key in list(org_dict.keys()):
     train_dict[key] = deepcopy(org_dict[key].iloc[train_date_id_list,:])
     
 
-# 評価データを取得 
-test_dict = {}
-for key in list(org_dict.keys()):
-    test_dict[key] = deepcopy(org_dict[key].iloc[test_date_id_list,:])
-
-
 print("\n・オリジナル原系列の訓練データ範囲のデータ数調査===============================")
 time.sleep(0.5)
 n_org_train_dict = {}
@@ -236,23 +241,28 @@ for milage in tqdm(list(org_dict["raw0"].columns)):
 print("\n・予測モデル作成・逐次予測 ===============================")
 print("ARIMA")
 time.sleep(0.5)
-df_pred_raw_lm, start_raw_dict, maked_model_dict, inspects_dict_dict = ARIMA_funcs.predWithARIMA(org_dict=org_dict, train_dict=train_dict, n_diff=n_diff, start_date_id=start_date_id, t_pred=t_pred, model_name="lm", n_org_train_dict=n_org_train_dict)
+df_pred_raw_lm, start_raw_dict, maked_model_dict, inspects_dict_dict = ARIMA_funcs.predWithARIMA(org_dict=org_dict, train_dict=train_dict, n_diff=n_diff, start_date_id=start_date_id, t_pred=t_pred+lag_t, model_name="lm", n_org_train_dict=n_org_train_dict)
+
 
 print("直近5日間中央値")
 time.sleep(0.5)
-df_pred_raw_mean, _, _, _ = ARIMA_funcs.predWithARIMA(org_dict=org_dict, train_dict=train_dict, n_diff=n_diff, start_date_id=start_date_id, t_pred=t_pred, model_name="median", n_org_train_dict=n_org_train_dict)
-
+df_pred_raw_mean, _, _, _ = ARIMA_funcs.predWithARIMA(org_dict=org_dict, train_dict=train_dict, n_diff=n_diff, start_date_id=start_date_id, t_pred=t_pred+lag_t, model_name="median", n_org_train_dict=n_org_train_dict)
 
 
 ## 後処理 ==================================================================================
 print("\n・後処理 ===============================")
 time.sleep(0.5)
-df_pred_raw_lm, over_tol = ARIMA_funcs.postTreat(df_pred_raw=df_pred_raw_lm, start_raw_dict=start_raw_dict, t_pred=t_pred, tol=20)
-
+df_pred_raw_lm, over_tol = ARIMA_funcs.postTreat(df_pred_raw=df_pred_raw_lm, start_raw_dict=start_raw_dict, t_pred=t_pred+lag_t, tol=20)
+df_pred_raw_lm = df_pred_raw_lm.iloc[range(lag_t, t_pred+lag_t),:]
+df_pred_raw_mean = df_pred_raw_mean.iloc[range(lag_t, t_pred+lag_t),:]
 
 
 
 ## 結果 =============================================================
+# 評価データを取得 
+test_dict = {}
+for key in list(org_dict.keys()):
+    test_dict[key] = deepcopy(org_dict[key].iloc[test_date_id_list,:])
 
 # MAE計算・プロット
 print("MAE lm")
