@@ -12,13 +12,15 @@ from copy import deepcopy
 from tqdm import tqdm
 import time
 import shutil
+import configparser
 
 from scripts import make_data_funcs
 from scripts import ARIMA_funcs
 
 
-# データ読み込み
-track = "A"
+
+## データ読み込み ===================================================================================
+track = "D"
 df_irregularity = pd.read_csv(f"input/irregularity_{track}.csv")
 df_irregularity_phase_modified = pd.read_csv(f"input/irregularity_{track}_phase_modified.csv")
 
@@ -29,72 +31,53 @@ df_irregularity_phase_modified.shape
 
 
 
-## 出力フォルダ作成
-output_pass = f'output/{datetime.now().strftime("%Y%m%d")}'
-make_data_funcs.makeNewFolder(output_pass)
+
+## 初期処理 ===================================================================================
+## 設定ファイル読み込み
+config = configparser.ConfigParser()
+config.read(f"scripts/conf/track_{track}.ini", 'UTF-8')
+
+# [prior]
+tol_sigma_raw_prior = config.getfloat('prior', 'tol_sigma_raw_prior')
+window = config.getint('prior', 'window')
+min_periods = config.getint('prior', 'min_periods')
+center = config.getboolean('prior', 'center')
+tol_sigma_diff_prior = config.getfloat('prior', 'tol_sigma_diff_prior')
+window_diff = config.getint('prior', 'window_diff')
+min_periods_diff = config.getint('prior', 'min_periods_diff')
+center_diff = config.getboolean('prior', 'center_diff')
+start_period = config.getint('prior', 'start_period')
+n_average_date = config.getint('prior', 'n_average_date')
+start_average_method = config.get('prior', 'start_average_method')
+
+# [model]
+train_date_id_list = list(range(config.getint('model', 'train_date_id_start'), config.getint('model', 'train_date_id_end')))
+model_name_pred = config.get('model', 'model_name_pred')
+n_diff = config.getint('model', 'n_diff')
+
+# [post]
+tol_abnormal_max_min = config.getfloat('post', 'tol_abnormal_max_min')
+tol_abnormal_upper = config.getint('post', 'tol_abnormal_upper')
+tol_abnormal_lower = config.getint('post', 'tol_abnormal_lower')
+method_post = config.get('post', 'method_post')
+
+# [others]
+lag_t = config.getint('others', 'lag_t')
 
 
-## 設定 ===========================================================
-# 訓練期間
-if track=="A":
-    train_date_id_list = list(range(250, 365)) # track A
-    lag_t = 0
-    tol_abnormal_upper = 13
-    tol_abnormal_lower = -13
-    method_post = "mean"
-    
-elif track=="B":
-    train_date_id_list = list(range(100,280))
-    lag_t = 12
-    tol_abnormal_upper = 17
-    tol_abnormal_lower = -17
-    method_post = "aaa"
-    
-elif track=="C":
-    train_date_id_list = list(range(280, 365)) # track C
-    lag_t = 0
-    tol_abnormal_upper = 20
-    tol_abnormal_lower = -20
-    method_post = "aaa"
-
-elif track=="D":
-    train_date_id_list = list(range(140, 240))
-    lag_t = 0
-    tol_abnormal_upper = 17
-    tol_abnormal_lower = -17
-    method_post = "aaa"
-
-
-# 予測対象キロ程，予測期間
+## 予測対象キロ程，予測期間の設定
 target_milage_id_list = range(df_irregularity_phase_modified.shape[1])   # 変更しない
 t_pred = 91  # 変更しない
 start_date_id=df_irregularity_phase_modified.shape[0] -1 -lag_t # start_date_id日目の原系列，差分系列を初期値とする＝＞start_date_id+1日目から予測
 
 
-# 前処理(原系列)の設定
-tol_sigma_raw_prior = 2.5
-window=50
-min_periods=3
-center=True
-
-# 前処理(差分系列)の設定
-tol_sigma_diff_prior = 2.0
-window_diff=3
-min_periods_diff=1
-center_diff=True
-
-# 前処理(初期値)の設定
-start_period = 30
-n_average_date = 5
-start_average_method = "median"#"median", "mean"
-
-# 予測モデルの設定
-model_name_pred = "lm"     # "lm", "SVR", "mean"
-n_diff = 3
+## 出力フォルダ作成
+output_pass = f'output/{datetime.now().strftime("%Y%m%d")}'
+make_data_funcs.makeNewFolder(output_pass)
 
 
-## 後処理(予測結果修正)の設定
-tol_abnormal_max_min = 2.5
+
+
 
 
 
@@ -153,29 +136,25 @@ time.sleep(0.5)
 df_pred_raw = ARIMA_funcs.predWithARIMA(train_dict=train_dict, start_raw_dict=start_raw_dict, start_diff_dict=start_diff_dict, n_diff=n_diff, start_date_id=start_date_id, t_pred=t_pred+lag_t, model_name=model_name_pred, n_org_train_dict=n_org_train_dict)
 
 
-# 絶対値20越えの結果を保存
-tmp = (np.abs(df_pred_raw) > 20).any(axis=0)
-len(tmp[tmp])
-df_pred_raw.loc[:,tmp]
-
-folder_name = "pred_result_movie_honban"
-make_data_funcs.makeNewFolder(folder_name)
-train_dict["raw0"].loc[:,tmp].to_csv(f"{folder_name}/train_over_tol.csv",index=True,header=True)
-df_pred_raw.loc[:,tmp].to_csv(f"{folder_name}/pred_ARIMA_over_tol.csv",index=True,header=True)
-
 
 
 ## 後処理 ==================================================================================
 print("\n・後処理 ===============================")
 time.sleep(0.5)
+
+# 予測結果を検査し，異常を取得
 abnormal_total, diagnosis_result = ARIMA_funcs.diagnosePredResult(df_pred=deepcopy(df_pred_raw), df_train=deepcopy(train_dict["raw0_prior_treated"]), tol_abnormal_max_min = tol_abnormal_max_min, tol_abnormal_upper = tol_abnormal_upper, tol_abnormal_lower = tol_abnormal_lower)
 
-folder_name = "pred_result_movie_honban"
+# 異常あり結果を出力
+folder_name = "output/0_pred_result_movie_honban"
 make_data_funcs.makeNewFolder(folder_name)
 train_dict["raw0"].loc[:,abnormal_total].to_csv(f"{folder_name}/train_over_tol.csv",index=True,header=True)
 df_pred_raw.loc[:,abnormal_total].to_csv(f"{folder_name}/pred_ARIMA_over_tol.csv",index=True,header=True)
 
+# 異常値の除去
 df_pred_raw = ARIMA_funcs.postTreat(df_pred_raw=df_pred_raw, abnormal_total=abnormal_total, start_raw_dict=start_raw_dict, t_pred=t_pred+lag_t, method=method_post)
+
+# 予測対象範囲外の除去
 df_pred_raw = df_pred_raw.iloc[range(lag_t, t_pred+lag_t),:]
 
 
@@ -185,14 +164,16 @@ df_pred_raw.to_csv(f"{output_pass}/pred_track_{track}.csv",index=False)
 
 # cfgファイルをoutputにコピー
 make_data_funcs.makeNewFolder(f"{output_pass}/{track}")
+make_data_funcs.makeNewFolder(f"{output_pass}/conf")
 shutil.copyfile("scripts/honban.py", f"{output_pass}/{track}/honban.py")
 shutil.copyfile("scripts/ARIMA_funcs.py", f"{output_pass}/{track}/ARIMA_funcs.py")
 shutil.copyfile("scripts/make_data_funcs.py", f"{output_pass}/{track}/make_data_funcs.py")
+shutil.copyfile(f"scripts/conf/track_{track}.ini", f"{output_pass}/conf/track_{track}.ini")
 
 
 
 ## 動画用データ保存 =================================================== 
-folder_name = "pred_result_movie_honban"
+folder_name = "output/0_movie_pred_result_honban"
 make_data_funcs.makeNewFolder(folder_name)
 shutil.copyfile("input/irregularity_A.csv", f"{folder_name}/org_raw0.csv")
 org_dict["raw0"].to_csv(f"{folder_name}/raw0.csv",index=False,header=True)
