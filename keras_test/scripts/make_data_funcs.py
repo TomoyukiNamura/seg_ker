@@ -8,6 +8,13 @@ from copy import deepcopy
 from tqdm import tqdm
 import time
 
+# 出力フォルダ作成
+def makeNewFolder(folder_name):
+    if os.path.exists(folder_name)==False:
+        os.mkdir(folder_name)
+        return True
+    else:
+        return False
 
 def priorRawData(df_raw, window, min_periods, center, tol_diff=0.7, tol_n_group=5):
     # 入力した原系列をコピー
@@ -127,3 +134,68 @@ def priorDiffData(org_df_raw, df_raw, n_diff, tol_sigma, window=7, min_periods=1
     df_result = df_result.rolling(window=window, min_periods=min_periods, center=center).mean()
         
     return df_result
+
+
+def makeStartRawDict(df_raw, start_date_id, start_period, n_average_date, start_average_method):
+    start_raw_dict = {}
+    
+    for milage in tqdm(list(df_raw.columns)):
+        # 対象期間の原系列を取得
+        tmp_raw = df_raw.loc[range(start_date_id-start_period+1,start_date_id+1),milage]
+            
+        # nan除く過去n_start_date日分を初期値が計算対象
+        start_vector = tmp_raw.dropna().tail(n_average_date)
+        
+        ## ひとまずお蔵入り ======================================
+    #    # start_vectorの長さが0の場合，nan以外全期間のうち過去n_start_date日分を初期値を計算対象とする
+    #    if start_vector.shape[0]==0:
+    #        start_vector = df_raw.loc[range(start_date_id+1),milage].dropna().tail(n_average_date)
+        ## ひとまずお蔵入り ======================================
+        
+        # start_vectorの長さにより分岐
+        if start_vector.shape[0]>0:
+            # start_vectorの長さが0以上の場合，代表値を計算
+            if start_average_method=="mean":
+                start_raw_dict[milage] = np.mean(start_vector)
+            else:
+                start_raw_dict[milage] = np.median(start_vector)
+            
+        else:
+            start_raw_dict[milage] = np.nan
+        
+    # Series化
+    start_raw_dict = pd.Series(start_raw_dict)
+    
+    # nanを直線補完
+    start_raw_dict = start_raw_dict.interpolate()
+    
+    # 辞書型化
+    start_raw_dict = start_raw_dict.to_dict()
+    
+    return start_raw_dict
+
+
+def makeStartDiffDict(df_dict, n_diff, start_date_id):
+    start_diff_dict = {}
+    start_values_result_dict = {}
+    
+    for milage in tqdm(list(df_dict[f"diff0"].columns)):
+        # 差分系列(NaNの場合は0で補完)
+        n_diff_iszero = 0
+        start_diff = []
+    
+        for i in range(n_diff):
+            tmp_data = df_dict[f"diff{i}"][milage][start_date_id]
+            
+            if np.isnan(tmp_data):
+                n_diff_iszero += 1
+                start_diff.append(np.array(0))
+            else:
+                start_diff.append(np.array(tmp_data))
+                
+        start_diff_dict[milage] = np.dstack(start_diff)[0]
+        
+        # 初期値作成の結果をまとめる
+        start_values_result_dict[milage] = {"n_diff_iszero":n_diff_iszero}
+    
+    return start_diff_dict, start_values_result_dict

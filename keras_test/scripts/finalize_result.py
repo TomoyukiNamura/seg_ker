@@ -11,7 +11,7 @@ from copy import deepcopy
 from tqdm import tqdm
 
 # ファイナライズ対象のフォルダ名
-finalize_folder_name = "20181231"
+finalize_folder_name = "20190102"
 
 
 ## 
@@ -81,6 +81,4 @@ while(is_success==False):
     else:
         folder_id += 1
 
-
-    
 

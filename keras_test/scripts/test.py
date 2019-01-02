@@ -22,50 +22,14 @@ from scripts import ARIMA_funcs
 import scripts.model as model
 
 
-#import configparser
-#inifile = configparser.ConfigParser()
-#inifile.read('scripts/main.ini', 'UTF-8')
-#
-#print(type(inifile.get('input', 'file_name')))
-#print(type(inifile.get('prior', 'window')))
-
-
-        
-def makeNewFolder(folder_name):
-    if os.path.exists(folder_name)==False:
-        os.mkdir(folder_name)
-        return True
-    else:
-        return False
-
-
 # データ読み込み
-track = "B"
-file_name = f"track_{track}.csv"
-df_track = pd.read_csv(f"input/{file_name}")
-df_track.head()
+track = "A"
+df_irregularity = pd.read_csv(f"input/irregularity_{track}.csv")
+df_irregularity_phase_modified = pd.read_csv(f"input/irregularity_{track}_phase_modified.csv")
 
-
-columns = "高低左"
-df_irregularity = []
-milage_list = list(df_track.loc[:,"キロ程"].unique())
-
-print("行：日付id, 列：キロ程　のデータ作成")
-time.sleep(0.5)
-for milage in tqdm(milage_list):
-    # 対象キロ程のデータを取得
-    tmp_df = df_track[df_track.loc[:,"キロ程"]==milage].loc[:,[columns]]
-    
-    # インデックスを初期化
-    tmp_df = tmp_df.reset_index(drop=True)
-    
-    # リネームしてアペンド
-    df_irregularity.append(tmp_df.rename(columns={columns: f"m{milage}"}))
-
-df_irregularity = pd.concat(df_irregularity, axis=1)
-df_irregularity.head
-df_irregularity.tail
-df_irregularity.shape
+df_irregularity_phase_modified.head()
+df_irregularity_phase_modified.tail()
+df_irregularity_phase_modified.shape
 
 
 
@@ -85,6 +49,7 @@ if track=="A":
     start_date_id=150  # start_date_id日目の原系列，差分系列を初期値とする＝＞start_date_id+1日目から予測
     train_date_id_list = list(range(0, 200)) # track A
     lag_t = 0
+    start_raw_file_name = f"irregularity_{track}.csv"
     
 elif track=="B":
     t_pred = 41#91
@@ -95,6 +60,7 @@ elif track=="B":
     #train_date_id_list = list(range(150, 280))
     lag_t = 12
     t_pred = 91
+    start_raw_file_name = f"irregularity_{track}.csv"
     
     
 elif track=="C":
@@ -103,6 +69,7 @@ elif track=="C":
     #train_date_id_list = list(range(0, 220)) # track C
     train_date_id_list = list(range(280, 365)) # track C
     lag_t = 0
+    start_raw_file_name = f"irregularity_{track}.csv"
     
 elif track=="D":
     t_pred = 41#91
@@ -110,6 +77,7 @@ elif track=="D":
 #    train_date_id_list = list(range(0, 250)) # track D
     train_date_id_list = list(range(140, 240))
     lag_t = 0
+    start_raw_file_name = f"irregularity_{track}.csv"
 
 start_date_id = start_date_id -1 - lag_t
 test_date_id_list = range(start_date_id+1+lag_t, start_date_id+1+lag_t+t_pred)
@@ -128,6 +96,12 @@ window_diff=3
 min_periods_diff=1
 center_diff=True
 
+# 前処理(初期値)の設定
+start_period = 30
+n_average_date = 5
+start_average_method = "mean"#"median"
+
+
 # 予測モデルの設定
 model_name_pred = "lm"     #"SVR"
 n_diff = 3
@@ -140,9 +114,7 @@ tol_abnormal_lower = -25
 
 ## スモールデータ取得=========================================
 df_irregularity_small = deepcopy(df_irregularity.iloc[:,target_milage_id_list])
-
-#for milage in list(df_irregularity_small.columns):
-#    plt.plot(df_irregularity_small[milage]);plt.ylim([-10,10]);plt.grid();plt.show()
+df_irregularity_phase_modified_small = deepcopy(df_irregularity_phase_modified.iloc[:,target_milage_id_list])
 
 
 
@@ -154,47 +126,19 @@ time.sleep(0.5)
 
 # 0時点の原系列，差分系列をまとめる
 org_dict = {}
-org_dict["raw0"] = deepcopy(df_irregularity_small)
+org_dict["raw0"] = deepcopy(df_irregularity_phase_modified_small)
 
 # 原系列の前処理：移動平均
-#org_dict["raw0_prior_treated"] = make_data_funcs.priorRawData(df_raw=deepcopy(df_irregularity_small), tol_sigma = tol_sigma_raw_prior, 
-#                                                              window=window, min_periods=min_periods, center=center)
-
-
 org_dict["raw0_prior_treated"], tmp_raw0_median, tmp_raw0_median_diff  = make_data_funcs.priorRawData(df_raw=org_dict["raw0"], window=window, min_periods=min_periods, center=center, tol_diff=0.7, tol_n_group=5)
 
 
-
-
 folder_name = "movie"
-makeNewFolder(folder_name)
+make_data_funcs.makeNewFolder(folder_name)
 org_dict["raw0"].to_csv(f"{folder_name}/raw0.csv",index=False,header=True)
 tmp_raw0_median.to_csv(f"{folder_name}/tmp_raw0_median.csv",index=False,header=True)
 tmp_raw0_median_diff.to_csv(f"{folder_name}/diff_prior_treated.csv",index=False,header=True)
 org_dict["raw0_prior_treated"].to_csv(f"{folder_name}/raw0_prior_treated.csv",index=False,header=True)
 
-
-#milage = "m11723"#
-#milage = "m11717"#m11723
-#plt.plot(org_dict["raw0"][milage])
-#plt.plot(org_dict["raw0_prior_treated"][milage])
-
-
-#milage = "m18700"#
-#plt.plot(org_dict["raw0"][milage])
-#plt.plot(org_dict["raw0_prior_treated"][milage])
-
-
-
-
-#milage_list = ["m20036"]
-#ylim = [-8,8]
-#for milage in milage_list:
-#    plt.plot(org_dict["raw0"][milage])
-##    plt.plot(tmp_raw0_cp[milage])
-##    plt.plot(tmp_raw0_cp.rolling(window=10, min_periods=1, center=True).median()[milage])
-#    plt.plot(org_dict["raw0_prior_treated"][milage])
-#    plt.grid();plt.title(milage);plt.ylim(ylim);plt.show()
 
 
 
@@ -202,27 +146,22 @@ org_dict["raw0_prior_treated"].to_csv(f"{folder_name}/raw0_prior_treated.csv",in
 org_dict["diff0"] = make_data_funcs.priorDiffData(org_df_raw=org_dict["raw0"], df_raw=deepcopy(org_dict["raw0_prior_treated"]), n_diff=n_diff, tol_sigma=tol_sigma_diff_prior, window=window_diff, min_periods=min_periods_diff, center=center_diff)
     
 
-#milage_list = ["m11843", "m11844"]
-#for milage in milage_list:
-##    plt.plot(org_dict["raw0"].diff()[milage])
-#    plt.plot(org_dict["diff0"][milage])
-#    plt.grid();plt.title(milage);plt.show()
-##    plt.hist(org_dict["diff0"][milage],range=[-0.01,0.01],bins=15);plt.show()
-
-
 # n_diff+1期分の差分系列をまとめる
 for i in range(n_diff):
     org_dict[f"diff{i+1}"] = org_dict["diff0"].shift(i+1)
 
 
 
-#vec_1 = org_dict["diff0"]["m23820"]
-#vec_2 = org_dict["diff0"]["m23821"]
-#tmp1 = vec_1.isna()==False
-#tmp2 = vec_2.isna()==False
-#tmp = np.logical_and(tmp1, tmp2)
-#np.corrcoef(vec_1[tmp],vec_2[tmp])
-#plt.scatter(vec_1,vec_2)
+## 初期値の準備
+print("\n原系列初期値を取得")
+time.sleep(0.5)
+start_raw_dict = make_data_funcs.makeStartRawDict(df_raw=df_irregularity_small, start_date_id=start_date_id, start_period=start_period, n_average_date=n_average_date, start_average_method=start_average_method)
+
+
+print("\n差分系列初期値を取得")
+time.sleep(0.5)
+start_diff_dict, start_values_result_dict = make_data_funcs.makeStartDiffDict(df_dict=org_dict, n_diff=n_diff, start_date_id=start_date_id)
+
 
 
 
@@ -245,12 +184,12 @@ for milage in tqdm(list(org_dict["raw0"].columns)):
 print("\n・予測モデル作成・逐次予測 ===============================")
 print("ARIMA")
 time.sleep(0.5)
-df_pred_raw_lm, start_raw_dict, maked_model_dict, inspects_dict_dict = ARIMA_funcs.predWithARIMA(org_dict=org_dict, train_dict=train_dict, n_diff=n_diff, start_date_id=start_date_id, t_pred=t_pred+lag_t, model_name="lm", n_org_train_dict=n_org_train_dict)
+df_pred_raw_lm = ARIMA_funcs.predWithARIMA(train_dict=train_dict, start_raw_dict=start_raw_dict, start_diff_dict=start_diff_dict, n_diff=n_diff, start_date_id=start_date_id, t_pred=t_pred+lag_t, model_name="lm", n_org_train_dict=n_org_train_dict)
 
 
 print("直近5日間中央値")
 time.sleep(0.5)
-df_pred_raw_mean, _, _, _ = ARIMA_funcs.predWithARIMA(org_dict=org_dict, train_dict=train_dict, n_diff=n_diff, start_date_id=start_date_id, t_pred=t_pred+lag_t, model_name="median", n_org_train_dict=n_org_train_dict)
+df_pred_raw_mean = ARIMA_funcs.predWithARIMA(train_dict=train_dict, start_raw_dict=start_raw_dict, start_diff_dict=start_diff_dict, n_diff=n_diff, start_date_id=start_date_id, t_pred=t_pred+lag_t, model_name="median", n_org_train_dict=n_org_train_dict)
 
 
 ## 後処理 ==================================================================================
@@ -290,7 +229,7 @@ plt.plot(diff_mae, color="red");plt.ylim([-0.1, 0.1]);plt.grid();plt.show()
 
 
 folder_name = "pred_result_movie"
-makeNewFolder(folder_name)
+make_data_funcs.makeNewFolder(folder_name)
 
 train_dict["raw0"].to_csv(f"{folder_name}/train.csv",index=True,header=True)
 test_dict["raw0"].to_csv(f"{folder_name}/test.csv",index=True,header=True)
@@ -311,17 +250,12 @@ for milage_id in milage_id_list:
     milage = list(df_pred_raw_lm.columns)[milage_id]
     print(f"\n{milage_id} {milage} ======================================================\n")
     print("lm")
-
-    if inspects_dict_dict!=None:
-        inspects_dict = inspects_dict_dict[milage]
-    else:
-        inspects_dict = None
         
-    ARIMA_funcs.PlotTruthPred(df_train=train_dict["raw0"][milage], df_truth=test_dict["raw0"][milage], df_pred=df_pred_raw_lm[milage], inspects_dict=inspects_dict, 
+    ARIMA_funcs.PlotTruthPred(df_train=train_dict["raw0"][milage], df_truth=test_dict["raw0"][milage], df_pred=df_pred_raw_lm[milage], inspects_dict=None, 
             ylim=ylim, r_plot_size=1,output_dir=f"ARIMA_{track}_lm", file_name=f"{milage_id}_{milage}")
     
     print("mean")
-    ARIMA_funcs.PlotTruthPred(df_train=train_dict["raw0"][milage], df_truth=test_dict["raw0"][milage], df_pred=df_pred_raw_mean[milage], inspects_dict=inspects_dict, 
+    ARIMA_funcs.PlotTruthPred(df_train=train_dict["raw0"][milage], df_truth=test_dict["raw0"][milage], df_pred=df_pred_raw_mean[milage], inspects_dict=None, 
             ylim=ylim, r_plot_size=1,output_dir=f"ARIMA_{track}_mean", file_name=f"{milage_id}_{milage}")
         
     
