@@ -20,7 +20,7 @@ from scripts import ARIMA_funcs
 
 
 ## データ読み込み ===================================================================================
-track = "D"
+track = "A"
 df_irregularity = pd.read_csv(f"input/irregularity_{track}.csv")
 df_irregularity_phase_modified = pd.read_csv(f"input/irregularity_{track}_phase_modified.csv")
 
@@ -146,7 +146,7 @@ time.sleep(0.5)
 abnormal_total, diagnosis_result = ARIMA_funcs.diagnosePredResult(df_pred=deepcopy(df_pred_raw), df_train=deepcopy(train_dict["raw0_prior_treated"]), tol_abnormal_max_min = tol_abnormal_max_min, tol_abnormal_upper = tol_abnormal_upper, tol_abnormal_lower = tol_abnormal_lower)
 
 # 異常あり結果を出力
-folder_name = "output/0_pred_result_movie_honban"
+folder_name = "output/0_movie_pred_result_honban"
 make_data_funcs.makeNewFolder(folder_name)
 train_dict["raw0"].loc[:,abnormal_total].to_csv(f"{folder_name}/train_over_tol.csv",index=True,header=True)
 df_pred_raw.loc[:,abnormal_total].to_csv(f"{folder_name}/pred_ARIMA_over_tol.csv",index=True,header=True)
@@ -175,7 +175,7 @@ shutil.copyfile(f"scripts/conf/track_{track}.ini", f"{output_pass}/conf/track_{t
 ## 動画用データ保存 =================================================== 
 folder_name = "output/0_movie_pred_result_honban"
 make_data_funcs.makeNewFolder(folder_name)
-shutil.copyfile("input/irregularity_A.csv", f"{folder_name}/org_raw0.csv")
+shutil.copyfile(f"input/irregularity_{track}.csv", f"{folder_name}/org_raw0.csv")
 org_dict["raw0"].to_csv(f"{folder_name}/raw0.csv",index=False,header=True)
 org_dict["raw0_prior_treated"].to_csv(f"{folder_name}/raw0_prior_treated.csv",index=False,header=True)
 train_dict["raw0"].to_csv(f"{folder_name}/train.csv",index=True,header=True)
@@ -187,3 +187,5 @@ df_pred_raw.to_csv(f"{folder_name}/pred_ARIMA.csv",index=True,header=True)
 #tmp = (np.abs(df_pred_raw) > 10).any(axis=0)
 #df_pred_raw.loc[:,tmp].to_csv(f"{folder_name}/pred_ARIMA.csv",index=True,header=True)
 #df_pred_raw.loc[:,tmp].shape
+
+

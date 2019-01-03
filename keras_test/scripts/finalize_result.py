@@ -11,7 +11,7 @@ from copy import deepcopy
 from tqdm import tqdm
 
 # ファイナライズ対象のフォルダ名
-finalize_folder_name = "20190102"
+finalize_folder_name = "20190103"
 
 
 ## 

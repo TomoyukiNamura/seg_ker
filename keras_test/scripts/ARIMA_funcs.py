@@ -32,43 +32,8 @@ def dfDict2ARIMAInput(df_dict, n_diff, milage):
         
     return y ,X
 
-
-## ARIMA(n_diff,1,0)の初期値データ作成
-def dfDict2ARIMAInit(df_dict, n_diff, milage, start_date_id):
-    # 原系列(NaNの場合は1時点前のデータで補完)
-    how_long_back = 0
-    start_raw = df_dict["raw0"][milage][start_date_id]
-    #start_raw = df_dict["raw0_prior_treated"][milage][start_date_id]
     
-    while(np.isnan(start_raw)):
-        how_long_back += 1
-        start_raw = df_dict["raw0"][milage][start_date_id-how_long_back]
-        #start_raw = df_dict["raw0_prior_treated"][milage][start_date_id-how_long_back]
-        
-    start_raw = np.array([[start_raw]])
-        
-
-    # 差分系列(NaNの場合は0で補完)
-    n_diff_iszero = 0
-    start_diff = []
-    
-    for i in range(n_diff):
-        tmp_data = df_dict[f"diff{i}"][milage][start_date_id]
-        
-        if np.isnan(tmp_data):
-            n_diff_iszero += 1
-            start_diff.append(np.array(0))
-        else:
-            start_diff.append(np.array(tmp_data))
-            
-    start_diff = np.dstack(start_diff)[0]
-    
-    # 初期値作成の結果をまとめる
-    result = {"how_long_back":how_long_back, "n_diff_iszero":n_diff_iszero}
-    
-    return start_raw, start_diff, result
-    
-
+# 作成済みモデルと初期値を用いて，逐次予測を実行
 def recursivePredARIMA(model, start_diff, start_raw, t_pred):
     # 原系列，差分系列データを初期化
     current_diff = deepcopy(start_diff)
@@ -94,7 +59,7 @@ def recursivePredARIMA(model, start_diff, start_raw, t_pred):
         
     return pred_raw_list
 
-
+# 初期値のみで逐次予測を実行
 def predOnlyStart(start_raw, t_pred):
     pred_raw_list = []
     for i in range(t_pred):

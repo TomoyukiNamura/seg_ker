@@ -16,18 +16,20 @@ import configparser
 
 from scripts import make_data_funcs
 from scripts import ARIMA_funcs
-import scripts.model as model
 
 
 
 ## データ読み込み ===================================================================================
-track = "D"
+track = "A"
 df_irregularity = pd.read_csv(f"input/irregularity_{track}.csv")
 df_irregularity_phase_modified = pd.read_csv(f"input/irregularity_{track}_phase_modified.csv")
 
 df_irregularity_phase_modified.head()
 df_irregularity_phase_modified.tail()
 df_irregularity_phase_modified.shape
+
+
+
 
 
 
@@ -53,7 +55,6 @@ start_average_method = config.get('prior', 'start_average_method')
 
 # [model]
 train_date_id_list = list(range(config.getint('model', 'train_date_id_start'), config.getint('model', 'train_date_id_end')))
-model_name_pred = config.get('model', 'model_name_pred')
 n_diff = config.getint('model', 'n_diff')
 
 # [post]
@@ -75,7 +76,7 @@ org_start_date_id = config.getint('others', 'start_date_id')
 #target_milage_id_list = range(6800,7200)
 #target_milage_id_list = range(6970,7100)
 #target_milage_id_list = range(1700,1730)#1723
-target_milage_id_list = range(8580,8600)#1723
+target_milage_id_list = range(8500,8530)#1723
 
 t_pred = 41
 start_date_id = org_start_date_id -1 - lag_t # start_date_id日目の原系列，差分系列を初期値とする＝＞start_date_id+1日目から予測
@@ -209,7 +210,7 @@ plt.plot(diff_mae, color="red");plt.ylim([-0.1, 0.1]);plt.grid();plt.show()
 ## 動画用データ保存 =================================================== 
 folder_name = "output_test/movie_pred_result"
 make_data_funcs.makeNewFolder(folder_name)
-shutil.copyfile("input/irregularity_A.csv", f"{folder_name}/org_raw0.csv")
+shutil.copyfile(f"input/irregularity_{track}.csv", f"{folder_name}/org_raw0.csv")
 org_dict["raw0"].to_csv(f"{folder_name}/raw0.csv",index=False,header=True)
 org_dict["raw0_prior_treated"].to_csv(f"{folder_name}/raw0_prior_treated.csv",index=False,header=True)
 train_dict["raw0"].to_csv(f"{folder_name}/train.csv",index=True,header=True)
@@ -219,7 +220,7 @@ df_pred_raw_lm.to_csv(f"{folder_name}/pred_ARIMA.csv",index=True,header=True)
 
 
 ## 結果をプロット ======================================================================
-milage_id_list = range(0,1)
+milage_id_list = range(17,20)
 ylim=[-10,10]
 for milage_id in milage_id_list:
     milage = list(df_pred_raw_lm.columns)[milage_id]
@@ -238,17 +239,46 @@ for milage_id in milage_id_list:
 
 
 
-    
+
+
+### 入力 =================================
+#train_dict
+#start_raw_dict
+#start_diff_dict
+#n_diff
+#start_date_id
+#t_pred+lag_t
+#n_org_train_dict
+#
+#
+#
+#    
 ### ニューラルネットワーク ========================================
+#import scripts.model as model
+#
 ## dfから入力データ作成
-#y, X = model.dfDict2SAMInput(df_diff=df_spatio_diff)
+#y, X, n_X = model.dfDict2SpatialAriNnetInput(df_dict=train_dict, n_diff=n_diff, milage_list=list(train_dict["diff0"].columns))
 #
 ## spatialARIモデル作成
-#spatialARIModel = model.spatialARIModel(input_shape=(X.shape[1],X.shape[2]))
-#spatialARIModel.summary()
+#spatialAriNnet = model.spatialAriNnet(input_shape=(X.shape[1],X.shape[2]))
+#spatialAriNnet.summary()
 #
 ## 学習
-#model.fit(x=X, y=y, batch_size=10, epochs=10, verbose=1)
-#model.get_weights()
+#spatialAriNnet.fit(x=X, y=y, batch_size=10, epochs=300, verbose=1)
+#
+## 予測
+#tmp_pred = spatialAriNnet.predict(X[[0],:,:])
+#tmp_pred = np.reshape(tmp_pred, (tmp_pred.shape[1],))
+#
+#plt.plot(tmp_pred)
+#plt.plot(tmp_pred2)
+#
+## 重み取得
+#spatialAriNnet.get_weights()
 #
 #
+#tmp_lm = np.array(df_pred_raw_lm.iloc[0,:])
+#tmp_mean = np.array(df_pred_raw_mean.iloc[0,:])
+
+
+
