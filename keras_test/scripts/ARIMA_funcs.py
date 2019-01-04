@@ -8,6 +8,7 @@ from copy import deepcopy
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 from sklearn.linear_model import LinearRegression as lm
+from sklearn.linear_model import Ridge,Lasso
 from sklearn.svm import SVR
 from sklearn.neighbors import KNeighborsRegressor as knn
 from sklearn.metrics import mean_absolute_error
@@ -85,6 +86,14 @@ def predWithARIMA(train_dict, start_raw_dict, start_diff_dict, n_diff, start_dat
             if model_name=="lm":
                 # 学習
                 model = lm()
+                model.fit(X=X, y=y)
+                
+                # 逐次予測
+                pred_raw_list = recursivePredARIMA(model=model, start_diff=start_diff, start_raw=np.reshape(np.array(start_raw), (1,1)), t_pred=t_pred)
+            
+            elif model_name=="Ridge":
+                # 学習
+                model = Ridge(alpha=1.0)
                 model.fit(X=X, y=y)
                 
                 # 逐次予測

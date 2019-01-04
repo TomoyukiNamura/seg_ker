@@ -57,8 +57,8 @@ n_diff = config.getint('model', 'n_diff')
 
 # [post]
 tol_abnormal_max_min = config.getfloat('post', 'tol_abnormal_max_min')
-tol_abnormal_upper = config.getint('post', 'tol_abnormal_upper')
-tol_abnormal_lower = config.getint('post', 'tol_abnormal_lower')
+tol_abnormal_upper = config.getfloat('post', 'tol_abnormal_upper')
+tol_abnormal_lower = config.getfloat('post', 'tol_abnormal_lower')
 method_post = config.get('post', 'method_post')
 
 # [others]
@@ -111,6 +111,8 @@ start_raw_dict = make_data_funcs.makeStartRawDict(df_raw=df_irregularity, start_
 print("\n差分系列初期値を取得")
 time.sleep(0.5)
 start_diff_dict, start_values_result_dict = make_data_funcs.makeStartDiffDict(df_dict=org_dict, n_diff=n_diff, start_date_id=start_date_id)
+
+
 
 
 
@@ -189,3 +191,5 @@ df_pred_raw.to_csv(f"{folder_name}/pred_ARIMA.csv",index=True,header=True)
 #df_pred_raw.loc[:,tmp].shape
 
 
+np.max(np.max(df_pred_raw))
+np.min(np.min(df_pred_raw))

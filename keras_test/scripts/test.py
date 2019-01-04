@@ -20,7 +20,7 @@ from scripts import ARIMA_funcs
 
 
 ## データ読み込み ===================================================================================
-track = "A"
+track = "D"
 df_irregularity = pd.read_csv(f"input/irregularity_{track}.csv")
 df_irregularity_phase_modified = pd.read_csv(f"input/irregularity_{track}_phase_modified.csv")
 
@@ -76,9 +76,10 @@ org_start_date_id = config.getint('others', 'start_date_id')
 #target_milage_id_list = range(6800,7200)
 #target_milage_id_list = range(6970,7100)
 #target_milage_id_list = range(1700,1730)#1723
-target_milage_id_list = range(8500,8530)#1723
+target_milage_id_list = range(8500,8550)#1723
+#target_milage_id_list = range(df_irregularity_phase_modified.shape[1])
 
-t_pred = 41
+t_pred = 91#41
 start_date_id = org_start_date_id -1 - lag_t # start_date_id日目の原系列，差分系列を初期値とする＝＞start_date_id+1日目から予測
 test_date_id_list = range(start_date_id+1+lag_t, start_date_id+1+lag_t+t_pred)
 
@@ -206,79 +207,153 @@ diff_mae = np.array(list(mae_dict_lm.values())) - np.array(list(mae_dict_mean.va
 plt.plot(diff_mae, color="red");plt.ylim([-0.1, 0.1]);plt.grid();plt.show()
 
 
+#
+### 動画用データ保存 =================================================== 
+#folder_name = "output_test/movie_pred_result"
+#make_data_funcs.makeNewFolder(folder_name)
+#shutil.copyfile(f"input/irregularity_{track}.csv", f"{folder_name}/org_raw0.csv")
+#org_dict["raw0"].to_csv(f"{folder_name}/raw0.csv",index=False,header=True)
+#org_dict["raw0_prior_treated"].to_csv(f"{folder_name}/raw0_prior_treated.csv",index=False,header=True)
+#train_dict["raw0"].to_csv(f"{folder_name}/train.csv",index=True,header=True)
+#train_dict["raw0_prior_treated"].to_csv(f"{folder_name}/train_prior_treated.csv",index=True,header=True)
+#df_pred_raw_lm.to_csv(f"{folder_name}/pred_ARIMA.csv",index=True,header=True)
+#
 
-## 動画用データ保存 =================================================== 
-folder_name = "output_test/movie_pred_result"
-make_data_funcs.makeNewFolder(folder_name)
-shutil.copyfile(f"input/irregularity_{track}.csv", f"{folder_name}/org_raw0.csv")
-org_dict["raw0"].to_csv(f"{folder_name}/raw0.csv",index=False,header=True)
-org_dict["raw0_prior_treated"].to_csv(f"{folder_name}/raw0_prior_treated.csv",index=False,header=True)
-train_dict["raw0"].to_csv(f"{folder_name}/train.csv",index=True,header=True)
-train_dict["raw0_prior_treated"].to_csv(f"{folder_name}/train_prior_treated.csv",index=True,header=True)
-df_pred_raw_lm.to_csv(f"{folder_name}/pred_ARIMA.csv",index=True,header=True)
+
+
+
+
+### 動画用データ保存 =================================================== 
+#folder_name = "output_test/movie_pred_result5"
+#make_data_funcs.makeNewFolder(folder_name)
+#
+##diff_mae_1 = deepcopy(diff_mae)
+##tmp_nan = np.isnan(diff_mae_1)
+##diff_mae_1[tmp_nan] = 0
+##
+##tmp_bool1 = diff_mae_1 > 0.1
+#
+#shutil.copyfile(f"input/irregularity_{track}.csv", f"{folder_name}/org_raw0.csv")
+#org_dict["raw0"].loc[:,tmp_bool1].to_csv(f"{folder_name}/raw0.csv",index=False,header=True)
+#org_dict["raw0_prior_treated"].loc[:,tmp_bool1].to_csv(f"{folder_name}/raw0_prior_treated.csv",index=False,header=True)
+#train_dict["raw0"].loc[:,tmp_bool1].to_csv(f"{folder_name}/train.csv",index=True,header=True)
+#train_dict["raw0_prior_treated"].loc[:,tmp_bool1].to_csv(f"{folder_name}/train_prior_treated.csv",index=True,header=True)
+#df_pred_raw_lm.loc[:,tmp_bool1].to_csv(f"{folder_name}/pred_ARIMA.csv",index=True,header=True)
+
+
+
+### 結果をプロット ======================================================================
+#milage_id_list = range(17,20)
+#ylim=[-10,10]
+#for milage_id in milage_id_list:
+#    milage = list(df_pred_raw_lm.columns)[milage_id]
+#    print(f"\n{milage_id} {milage} ======================================================\n")
+#    print("lm")
+#        
+#    ARIMA_funcs.PlotTruthPred(df_train=train_dict["raw0"][milage], df_truth=test_dict["raw0"][milage], df_pred=df_pred_raw_lm[milage], inspects_dict=None, 
+#            ylim=ylim, r_plot_size=1,output_dir=None, file_name=f"{milage_id}_{milage}")
+#    
+#    print("mean")
+#    ARIMA_funcs.PlotTruthPred(df_train=train_dict["raw0"][milage], df_truth=test_dict["raw0"][milage], df_pred=df_pred_raw_mean[milage], inspects_dict=None, 
+#            ylim=ylim, r_plot_size=1,output_dir=None, file_name=f"{milage_id}_{milage}")
+        
+    
+
+
+
+
+## ニューラルネットワーク ========================================
+import scripts.model as model
+
+
+milage_list=['m18501','m18502','m18503','m18504']
+
+
+## milage_listの作成
+milage_list_list = []
+tmp_milage_list = []
+
+# n_org_train>=30で分割
+for milage in list(n_org_train_dict.keys()):
+    if n_org_train_dict[milage] >= 30:
+        tmp_milage_list.append(milage)
+    else:
+        tmp_milage_list = []
+
+
+df_pred_raw_NN = model.recursivePredSpatialAriNnet(milage_list=milage_list, train_dict=train_dict, start_raw_dict=start_raw_dict, start_diff_dict=start_diff_dict, n_diff=n_diff, start_date_id=start_date_id, t_pred=t_pred)
+
+
+
+## 後処理 ==================================================================================
+# 予測結果を検査し，異常を取得
+abnormal_total, diagnosis_result = ARIMA_funcs.diagnosePredResult(df_pred=deepcopy(df_pred_raw_NN), df_train=deepcopy(train_dict["raw0_prior_treated"]), tol_abnormal_max_min = tol_abnormal_max_min, tol_abnormal_upper = tol_abnormal_upper, tol_abnormal_lower = tol_abnormal_lower)
+
+# 異常値の除去
+df_pred_raw_NN = ARIMA_funcs.postTreat(df_pred_raw=df_pred_raw_NN, abnormal_total=abnormal_total, start_raw_dict=start_raw_dict, t_pred=t_pred+lag_t, method=method_post)
+
+# 予測対象範囲外の除去
+df_pred_raw_NN = df_pred_raw_NN.iloc[range(lag_t, t_pred+lag_t),:]
+
+
+
+
+## 結果 =============================================================
+
+# MAE計算・プロット
+print("MAE NN")
+mae_dict_NN = {}
+for milage in list(df_pred_raw_NN.columns):
+    mae_dict_NN[milage] = ARIMA_funcs.calcMAE(df_truth=test_dict["raw0"][milage], df_pred=df_pred_raw_NN[milage])
+ARIMA_funcs.plotTotalMAE(mae_dict=mae_dict_NN, ylim=[0.0, 1.0], r_plot_size=1, output_dir=f"{folder_name}/ARIMA")
+
+
+print("MAE lm")
+mae_dict_lm = {}
+for milage in list(df_pred_raw_lm.columns):
+    mae_dict_lm[milage] = ARIMA_funcs.calcMAE(df_truth=test_dict["raw0"][milage], df_pred=df_pred_raw_lm[milage])
+ARIMA_funcs.plotTotalMAE(mae_dict=mae_dict_lm, ylim=[0.0, 1.0], r_plot_size=1, output_dir=f"{folder_name}/median")
+
+
+
+print("MAE mean")
+mae_dict_mean = {}
+for milage in list(df_pred_raw_mean.columns):
+    mae_dict_mean[milage] = ARIMA_funcs.calcMAE(df_truth=test_dict["raw0"][milage], df_pred=df_pred_raw_mean[milage])
+ARIMA_funcs.plotTotalMAE(mae_dict=mae_dict_mean, ylim=[0.0, 1.0], r_plot_size=1, output_dir=f"{folder_name}/median")
+
+
+
+
+
+# lmとmeanのMAEの差分を計算・プロット(-の値の部分でlmが優っている)
+diff_mae = np.array(list(mae_dict_NN.values())) - np.array(list(mae_dict_mean.values()))
+plt.plot(diff_mae, color="red");plt.ylim([-0.1, 0.1]);plt.grid();plt.show()
+
+
+# lmとmeanのMAEの差分を計算・プロット(-の値の部分でlmが優っている)
+diff_mae = np.array(list(mae_dict_NN.values())) - np.array(list(mae_dict_lm.values()))
+plt.plot(diff_mae, color="red");plt.ylim([-0.1, 0.1]);plt.grid();plt.show()
+
 
 
 
 ## 結果をプロット ======================================================================
-milage_id_list = range(17,20)
+milage_id_list = range(0,3)
 ylim=[-10,10]
 for milage_id in milage_id_list:
     milage = list(df_pred_raw_lm.columns)[milage_id]
     print(f"\n{milage_id} {milage} ======================================================\n")
+    print("NN")
+    ARIMA_funcs.PlotTruthPred(df_train=train_dict["raw0"][milage], df_truth=test_dict["raw0"][milage], df_pred=df_pred_raw_NN[milage], inspects_dict=None, 
+            ylim=ylim, r_plot_size=1,output_dir=None, file_name=f"{milage_id}_{milage}")
+
+
     print("lm")
-        
     ARIMA_funcs.PlotTruthPred(df_train=train_dict["raw0"][milage], df_truth=test_dict["raw0"][milage], df_pred=df_pred_raw_lm[milage], inspects_dict=None, 
             ylim=ylim, r_plot_size=1,output_dir=None, file_name=f"{milage_id}_{milage}")
     
     print("mean")
     ARIMA_funcs.PlotTruthPred(df_train=train_dict["raw0"][milage], df_truth=test_dict["raw0"][milage], df_pred=df_pred_raw_mean[milage], inspects_dict=None, 
             ylim=ylim, r_plot_size=1,output_dir=None, file_name=f"{milage_id}_{milage}")
-        
-    
-
-
-
-
-
-
-### 入力 =================================
-#train_dict
-#start_raw_dict
-#start_diff_dict
-#n_diff
-#start_date_id
-#t_pred+lag_t
-#n_org_train_dict
-#
-#
-#
-#    
-### ニューラルネットワーク ========================================
-#import scripts.model as model
-#
-## dfから入力データ作成
-#y, X, n_X = model.dfDict2SpatialAriNnetInput(df_dict=train_dict, n_diff=n_diff, milage_list=list(train_dict["diff0"].columns))
-#
-## spatialARIモデル作成
-#spatialAriNnet = model.spatialAriNnet(input_shape=(X.shape[1],X.shape[2]))
-#spatialAriNnet.summary()
-#
-## 学習
-#spatialAriNnet.fit(x=X, y=y, batch_size=10, epochs=300, verbose=1)
-#
-## 予測
-#tmp_pred = spatialAriNnet.predict(X[[0],:,:])
-#tmp_pred = np.reshape(tmp_pred, (tmp_pred.shape[1],))
-#
-#plt.plot(tmp_pred)
-#plt.plot(tmp_pred2)
-#
-## 重み取得
-#spatialAriNnet.get_weights()
-#
-#
-#tmp_lm = np.array(df_pred_raw_lm.iloc[0,:])
-#tmp_mean = np.array(df_pred_raw_mean.iloc[0,:])
-
-
-
+#        
