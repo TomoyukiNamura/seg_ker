@@ -29,7 +29,7 @@ def makeNewFolder(folder_name):
 
 
 # 設定
-track_list = ["B", "C"]
+track_list = ["A", "B", "C", "D"]
 
 output_movie = True
 
