@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
+from keras import regularizers 
 from keras import optimizers
 from keras import losses
 from keras.models import Model
@@ -15,17 +16,18 @@ def spatialAriNnet(input_shape):
 
     # パディング+局所結合層
     x = Lambda(lambda x: temporal_padding(x, padding=(1, 1)))(inputs)
-    x = LocallyConnected1D(1, 3, padding='valid', activation='linear')(x)
+    x = LocallyConnected1D(1, 3, padding='valid', activation='linear', kernel_regularizer=regularizers.l2(1.0))(x)
+    
     
 #    # パディング+局所結合層（出力）
 #    x = Lambda(lambda x: temporal_padding(x, padding=(1, 1)))(x)
 #    predictions = LocallyConnected1D(1, 3, padding='valid', activation='linear')(x)
     
-    predictions = Flatten()(x)
+#    predictions = Flatten()(x)
     
 #    # 全結合層（出力）
-#    x = Flatten()(x)
-#    predictions = Dense(input_shape[0], activation='linear')(x)
+    x = Flatten()(x)
+    predictions = Dense(input_shape[0], activation='linear', kernel_regularizer=regularizers.l2(1.0))(x)
     
     model = Model(input=inputs, output=predictions)
     
