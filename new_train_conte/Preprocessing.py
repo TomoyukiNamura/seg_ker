@@ -19,9 +19,6 @@ import time
 import configparser
 
 from func import prior_funcs
-from func import model_funcs
-from func import post_funcs
-
 
 
 for track in ["A","B","C","D"]:
@@ -57,15 +54,9 @@ for track in ["A","B","C","D"]:
     start_average_method = config.get('prior', 'start_average_method')
     
     # [model]
-    train_date_id_list = list(range(config.getint('model', 'train_date_id_start'), config.getint('model', 'train_date_id_end')))
-    model_name_pred = config.get('model', 'model_name_pred')
     n_diff = config.getint('model', 'n_diff')
+    train_date_id_list = list(range(config.getint('model', 'train_date_id_start'), config.getint('model', 'train_date_id_end')))
     
-    # [post]
-    tol_abnormal_max_min = config.getfloat('post', 'tol_abnormal_max_min')
-    tol_abnormal_upper = config.getfloat('post', 'tol_abnormal_upper')
-    tol_abnormal_lower = config.getfloat('post', 'tol_abnormal_lower')
-    method_post = config.get('post', 'method_post')    
     
     
     ## 予測対象キロ程，予測期間の設定
@@ -145,7 +136,6 @@ for track in ["A","B","C","D"]:
     
     # 
     train_max_min = train_dict["raw0_prior_treated"].max() - train_dict["raw0_prior_treated"].min()
-    train_max_min.to_csv(f"output/Preprocessing/track_{track}/train_max_min.csv",index=True)
     np.savez(f"output/Preprocessing/track_{track}/train_max_min.npz", train_max_min)
     
     # 

@@ -141,7 +141,7 @@ def predOnlyStart(start_raw, t_pred):
 
 
 ## (変更)
-def predWithARIMA(train_data_dict, init_raw_dict, init_diff_dict, n_diff, start_date_id, t_pred, n_orgdata_dict):
+def predWithARIMA(train_data_dict, init_raw_dict, init_diff_dict, n_diff, t_pred, n_orgdata_dict):
         
     df_pred_raw = []
     
@@ -173,7 +173,7 @@ def predWithARIMA(train_data_dict, init_raw_dict, init_diff_dict, n_diff, start_
         df_pred_raw.append(pd.DataFrame({milage:pred_raw_list}))
         
     df_pred_raw = pd.concat(df_pred_raw, axis=1)
-    df_pred_raw.index = pd.RangeIndex(start=start_date_id+1, stop=start_date_id+1+t_pred, step=1)
+#    df_pred_raw.index = pd.RangeIndex(start=start_date_id+1, stop=start_date_id+1+t_pred, step=1)
     
     return df_pred_raw
 
