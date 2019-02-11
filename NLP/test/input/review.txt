@@ -1,0 +1,271 @@
+/* カテゴリテーブル */
+INSERT INTO categories (name, created_at, updated_at) VALUES ('アニメ', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO categories (name, created_at, updated_at) VALUES ('ゲーム', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO categories (name, created_at, updated_at) VALUES ('レビュー以外', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+/* キャラクタテーブル */
+INSERT INTO characters (name, age, birthday, favorite, dislike, content, created_at, updated_at) VALUES ('メイ', 17, '2001-01-01', '甘やかしてくれる人', 'イキリオタク', '説明文', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO characters (name, age, birthday, favorite, dislike, content, created_at, updated_at) VALUES ('サキ', 17, '2001-01-01', 'クラシック', 'ネバネバした食べ物', '説明文', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+/* ジャンルテーブル */
+INSERT INTO genres (category_id, name, created_at, updated_at) VALUES (1, '学園', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO genres (category_id, name, created_at, updated_at) VALUES (1, 'ロボット', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO genres (category_id, name, created_at, updated_at) VALUES (2, 'RPG', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO genres (category_id, name, created_at, updated_at) VALUES (2, 'シミュレーション', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO genres (category_id, name, created_at, updated_at) VALUES (3, 'アクセス記念', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO genres (category_id, name, created_at, updated_at) VALUES (3, '雑談', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+/* コラムテーブル */
+INSERT INTO articles (category_id, name, title_image_url, content, season, score, talk_flag, created_at, updated_at) VALUES (1, 'コードギアス', 'article/test1.jpg', 'レビュー内容', '2006-01-01', 92, False, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO articles (category_id, name, title_image_url, content, season, score, talk_flag, created_at, updated_at) VALUES (1, '武装神姫', 'article/busoushinki.jpg', 'レビュー内容', '2011-01-01', 15, False, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO articles (category_id, name, title_image_url, content, season, score, talk_flag, created_at, updated_at) VALUES (1, 'ガンダム', 'article/test3.jpg', 'レビュー内容', '1980-01-01', 44, False, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO articles (category_id, name, title_image_url, content, season, score, talk_flag, created_at, updated_at) VALUES (2, 'スーパーロボット大戦', 'article/test4.jpg', 'レビュー内容', '1991-01-01', 80, False, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO articles (category_id, name, title_image_url, content, season, score, talk_flag, created_at, updated_at) VALUES (2, 'クロノトリガー', 'article/test5.jpg', 'レビュー内容', '1995-01-01', 100, False, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO articles (category_id, name, title_image_url, content, season, score, talk_flag, created_at, updated_at) VALUES (2, 'ファイヤーエンブレム', 'article/test6.jpg', 'レビュー内容', '1990-01-01', 42, False, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO articles (category_id, name, title_image_url, content, talk_flag, created_at, updated_at) VALUES (3, '100アクセス記念', 'article/test.jpg', 'トーク内容', True, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO articles (category_id, name, title_image_url, content, talk_flag, created_at, updated_at) VALUES (3, 'メイの独り言', 'article/test.jpg', 'トーク内容', True, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO articles (category_id, name, title_image_url, content, season, score, talk_flag, created_at, updated_at) VALUES (1, 'ガーリッシュ ナンバー', 'article/girlish_number.jpg', 'レビュー内容', '2016-10-01', 35, False, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+/* トークテーブル */
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (1, 1, 'メイ', 'left', 'character/mei/left/m00_l.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (1, 2, 'サキ', 'right', 'character/saki/right/s00_r.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (1, 3, 'メイ', 'left', 'character/mei/left/m00_l.jpg', 1);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (1, 4, 'サキ', 'right', 'character/saki/right/s00_r.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (1, 5, 'サキ', 'right', 'character/saki/right/s00_r.jpg', 0);
+
+/* トーク詳細テーブル */
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (1, 1, 'normal', '', 'False', 'あいうえお');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (1, 2, 'color', 'red', 'False', 'かきくけこ');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (1, 3, 'normal', '', 'False', 'さしすせそ');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (1, 3, 'normal', '', 'True', 'たちつてと');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (1, 4, 'bold', '', 'False', 'なにぬねの');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (1, 5, 'link', '', 'False', 'はひふ');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (1, 5, 'normal', '', 'True', 'へほ');
+
+/* アクセスカウントテーブル */
+INSERT INTO access_counts (article_id, total_access_count, monthly_access_count, weekly_access_count, daily_access_count, created_at, updated_at) VALUES (1, 100, 100, 100, 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO access_counts (article_id, total_access_count, monthly_access_count, weekly_access_count, daily_access_count, created_at, updated_at) VALUES (2, 101, 101, 101, 101, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO access_counts (article_id, total_access_count, monthly_access_count, weekly_access_count, daily_access_count, created_at, updated_at) VALUES (3, 90, 102, 102, 102, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO access_counts (article_id, total_access_count, monthly_access_count, weekly_access_count, daily_access_count, created_at, updated_at) VALUES (4, 103, 103, 103, 103, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO access_counts (article_id, total_access_count, monthly_access_count, weekly_access_count, daily_access_count, created_at, updated_at) VALUES (5, 99, 104, 99, 104, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO access_counts (article_id, total_access_count, monthly_access_count, weekly_access_count, daily_access_count, created_at, updated_at) VALUES (6, 105, 80, 105, 105, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO access_counts (article_id, total_access_count, monthly_access_count, weekly_access_count, daily_access_count, created_at, updated_at) VALUES (7, 106, 106, 106, 106, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO access_counts (article_id, total_access_count, monthly_access_count, weekly_access_count, daily_access_count, created_at, updated_at) VALUES (8, 102, 107, 107, 107, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO access_counts (article_id, total_access_count, monthly_access_count, weekly_access_count, daily_access_count, created_at, updated_at) VALUES (9, 82, 82, 82, 40, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+/* 使用キャラクタテーブル */
+INSERT INTO used_characters (article_id, character_id, created_at, updated_at) VALUES (1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO used_characters (article_id, character_id, created_at, updated_at) VALUES (1, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO used_characters (article_id, character_id, created_at, updated_at) VALUES (2, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO used_characters (article_id, character_id, created_at, updated_at) VALUES (2, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO used_characters (article_id, character_id, created_at, updated_at) VALUES (3, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO used_characters (article_id, character_id, created_at, updated_at) VALUES (4, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO used_characters (article_id, character_id, created_at, updated_at) VALUES (5, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO used_characters (article_id, character_id, created_at, updated_at) VALUES (6, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO used_characters (article_id, character_id, created_at, updated_at) VALUES (7, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO used_characters (article_id, character_id, created_at, updated_at) VALUES (7, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO used_characters (article_id, character_id, created_at, updated_at) VALUES (8, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO used_characters (article_id, character_id, created_at, updated_at) VALUES (9, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO used_characters (article_id, character_id, created_at, updated_at) VALUES (9, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+/* 登録ジャンルテーブル */
+INSERT INTO registered_genres (article_id, genre_id, created_at, updated_at) VALUES (1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO registered_genres (article_id, genre_id, created_at, updated_at) VALUES (1, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO registered_genres (article_id, genre_id, created_at, updated_at) VALUES (2, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO registered_genres (article_id, genre_id, created_at, updated_at) VALUES (3, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO registered_genres (article_id, genre_id, created_at, updated_at) VALUES (4, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO registered_genres (article_id, genre_id, created_at, updated_at) VALUES (4, 4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO registered_genres (article_id, genre_id, created_at, updated_at) VALUES (5, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO registered_genres (article_id, genre_id, created_at, updated_at) VALUES (6, 4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO registered_genres (article_id, genre_id, created_at, updated_at) VALUES (7, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO registered_genres (article_id, genre_id, created_at, updated_at) VALUES (8, 6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO registered_genres (article_id, genre_id, created_at, updated_at) VALUES (9, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+/* コラム画像テーブル */
+INSERT INTO article_images (article_id, image_url, created_at, updated_at) VALUES (1, 'article/test.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO article_images (article_id, image_url, created_at, updated_at) VALUES (1, 'article/test.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO article_images (article_id, image_url, created_at, updated_at) VALUES (2, 'article/busoushinki.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO article_images (article_id, image_url, created_at, updated_at) VALUES (2, 'article/busoushinki1.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO article_images (article_id, image_url, created_at, updated_at) VALUES (3, 'article/test.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO article_images (article_id, image_url, created_at, updated_at) VALUES (4, 'article/test.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO article_images (article_id, image_url, created_at, updated_at) VALUES (4, 'article/test.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO article_images (article_id, image_url, created_at, updated_at) VALUES (5, 'article/test.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO article_images (article_id, image_url, created_at, updated_at) VALUES (6, 'article/test.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO article_images (article_id, image_url, created_at, updated_at) VALUES (7, 'article/test.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO article_images (article_id, image_url, created_at, updated_at) VALUES (9, 'article/girlish_number.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO article_images (article_id, image_url, created_at, updated_at) VALUES (9, 'article/girlish_number1.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+/* キャラクタ画像テーブル */
+INSERT INTO character_images (character_id, image_info, image_url, created_at, updated_at) VALUES (1, '画像情報', 'character/mei/test.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO character_images (character_id, image_info, image_url, created_at, updated_at) VALUES (1, '画像情報', 'character/mei/test.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO character_images (character_id, image_info, image_url, created_at, updated_at) VALUES (1, '画像情報', 'character/mei/test.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO character_images (character_id, image_info, image_url, created_at, updated_at) VALUES (2, '画像情報', 'character/saki/test.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO character_images (character_id, image_info, image_url, created_at, updated_at) VALUES (2, '画像情報', 'character/saki/test.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO character_images (character_id, image_info, image_url, created_at, updated_at) VALUES (2, '画像情報', 'character/saki/test.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+/* サイト画像テーブル */
+INSERT INTO site_images (image_info, image_url, created_at, updated_at) VALUES ('背景', 'site/test.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO site_images (image_info, image_url, created_at, updated_at) VALUES ('ヘッダー', 'site/test.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO site_images (image_info, image_url, created_at, updated_at) VALUES ('リンク', 'site/test.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+/* メッセージ種テーブル */
+INSERT INTO message_types (name, created_at, updated_at) VALUES ('リクエスト', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO message_types (name, created_at, updated_at) VALUES ('質問・感想', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO message_types (name, created_at, updated_at) VALUES ('要望・クレーム', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+/* メッセージテーブル */
+INSERT INTO messages (message_type_id, name, content, created_at, updated_at) VALUES (1, '生まれたての子鹿', 'コードギアスのレビューしてください！', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO messages (message_type_id, name, content, created_at, updated_at) VALUES (2, 'ナムラーシカ', 'いつも楽しみに見てます！', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO messages (message_type_id, name, content, created_at, updated_at) VALUES (3, 'しかぴっぴ', 'もっちゃんが臭すぎて無理、おえぇ', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+
+
+/* トークテーブル(武装神姫) */
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 1, 'メイ', 'left', 'character/mei/left/m00_l.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 2, 'サキ', 'right', 'character/saki/right/s00_r.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 3, 'メイ', 'left', 'character/mei/left/m00_l.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 4, 'サキ', 'right', 'character/saki/right/s00_r.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 5, 'メイ', 'left', 'character/mei/left/m00_l.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 6, 'サキ', 'right', 'character/saki/right/s00_r.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 7, 'メイ', 'left', 'character/mei/left/m00_l.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 8, 'サキ', 'right', 'character/saki/right/s00_r.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 9, 'メイ', 'left', 'character/mei/left/m00_l.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 10, 'サキ', 'right', 'character/saki/right/s00_r.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 11, 'メイ', 'left', 'character/mei/left/m00_l.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 12, 'サキ', 'right', 'character/saki/right/s00_r.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 13, 'メイ', 'left', 'character/mei/left/m00_l.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 14, 'サキ', 'right', 'character/saki/right/s00_r.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 15, 'メイ', 'left', 'character/mei/left/m00_l.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 16, 'メイ', 'left', 'character/mei/left/m00_l.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 17, 'サキ', 'right', 'character/saki/right/s00_r.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 18, 'メイ', 'left', 'character/mei/left/m00_l.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 19, 'サキ', 'right', 'character/saki/right/s00_r.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 20, 'メイ', 'left', 'character/mei/left/m00_l.jpg', 1);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 21, 'メイ', 'left', 'character/mei/left/m00_l.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 22, 'サキ', 'right', 'character/saki/right/s00_r.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 23, 'メイ', 'left', 'character/mei/left/m00_l.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 24, 'サキ', 'right', 'character/saki/right/s00_r.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 25, 'メイ', 'left', 'character/mei/left/m00_l.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 26, 'サキ', 'right', 'character/saki/right/s00_r.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 27, 'メイ', 'left', 'character/mei/left/m00_l.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 28, 'サキ', 'right', 'character/saki/right/s00_r.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 29, 'メイ', 'left', 'character/mei/left/m00_l.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 30, 'サキ', 'right', 'character/saki/right/s00_r.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (2, 31, 'メイ', 'left', 'character/mei/left/m00_l.jpg', 0);
+
+/* トーク詳細テーブル(武装神姫) */
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 1, 'normal', '', 'False', '今回はあなたの新境地を開拓するアニメ');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 1, 'color', 'red', 'False', '「武装神姫」');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 1, 'normal', '', 'False', 'です。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 2, 'normal', '', 'False', '何よその観るのに躊躇いが生まれるキャッチコピーは……。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 3, 'normal', '', 'False', '躊躇わないでください！');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 3, 'normal', '', 'True', '私の激推し作品なんですから！');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 4, 'normal', '', 'False', '……じゃあ聞くけど一体何を開拓されるアニメなの？');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 5, 'normal', '', 'False', 'それはですね、ズバリ');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 5, 'bold', '', 'False', '「メカ萌え」');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 5, 'normal', '', 'False', 'です！');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 6, 'normal', '', 'False', 'な、なるほど。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 7, 'normal', '', 'False', 'ちなみに');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 7, 'color', 'red', 'False', 'アフロダイA');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 7, 'normal', '', 'False', 'や');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 7, 'color', 'red', 'False', '銀鈴ロボ');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 7, 'normal', '', 'False', 'とはまたちょっとジャンルが違うので、それらを期待して観ると少しがっかりしてしまうかもしれません。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 8, 'bold', '', 'False', '大きなお友達');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 8, 'normal', '', 'False', 'にしか伝わらないネタは挟まない！');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 9, 'normal', '', 'False', 'これは失礼しました、話を戻します。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 9, 'normal', '', 'True', 'まずこの作品はアニメが発祥ではありません。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 10, 'normal', '', 'False', 'じゃあ漫画かラノベかしら。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 11, 'normal', '', 'False', 'いえ、実はフィギュアなんです。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 12, 'normal', '', 'False', 'フィギュア？');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 13, 'normal', '', 'False', 'えーっとですね、端的に説明しますと、武装神姫というのはコナミさんが発売しているフィギュアシリーズの名称なんです。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 14, 'normal', '', 'False', 'そこからアニメ化されたって事？');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 15, 'normal', '', 'False', 'その通りです。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 16, 'normal', '', 'False', '武装神姫は雑誌でも数多く取り上げられていて、書籍化やゲーム化、さらにはラジオ化までしている人気コンテンツ');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 16, 'bold', '', 'False', 'だった');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 16, 'normal', '', 'False', 'んですよ。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 17, 'normal', '', 'False', 'すごいのね～。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 17, 'normal', '', 'True', '全然知らなかっ……え？');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 17, 'normal', '', 'False', '人気コンテンツ');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 17, 'bold', '', 'False', 'だった？');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 18, 'normal', '', 'False', '意味は察してください。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 18, 'normal', '', 'True', '元々その道を愛する人の熱烈な支援に支えられている部分が大きかったですからね。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 18, 'normal', '', 'True', '意外と知らない人は多いと思いますよ。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 19, 'normal', '', 'False', '色々と触れてはいけない気がするから深く聞くのはやめるわ。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 19, 'normal', '', 'True', 'それで肝心のアニメの方はどうなの？');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 20, 'normal', '', 'False', 'さっきも言いましたが、メカやフィギュアにあまり関心がない人でも楽しめる激推し作品です！');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 21, 'normal', '', 'False', 'これを見てください。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 21, 'normal', '', 'True', '公式絵です。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 22, 'normal', '', 'False', 'あ、可愛い～。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 23, 'normal', '', 'False', 'そうでしょう。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 23, 'normal', '', 'True', '内容も神姫達の愛らしさを上手く表現した日常や、スピーディな戦闘シーンはかなりのクオリティですよ！');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 24, 'normal', '', 'False', 'そこまでオススメされるとさすがに興味が湧いてくるわね。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 25, 'normal', '', 'False', 'ジャンルとしては日常系なのでサキちゃんも抵抗なく観れると思います。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 25, 'normal', '', 'True', '多分ポッチィとタマミィ好きになりますよ。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 26, 'normal', '', 'False', '何その子達！');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 26, 'normal', '', 'True', 'もう名前から好きになりそうなんだけど！');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 27, 'normal', '', 'False', 'とにかくスタッフの愛を感じる作品です。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 27, 'normal', '', 'True', '後半の主要キャラによるオープニングのソロバージョンは必聴ですよ！');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 28, 'normal', '', 'False', '気になる評価は！？');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 29, 'normal', '', 'False', 'はい！');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 29, 'color', 'pink', 'True', '８６メイちゃん');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 29, 'normal', '', 'False', 'です！');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 30, 'normal', '', 'False', '思った以上に高評価ね。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 30, 'normal', '', 'True', 'これは絶対観なくちゃね！');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (2, 31, 'normal', '', 'False', 'ちなみに2015年にコトブキヤさんからプラモデルでの復活が発表されているのでそちらもお見逃しなく！');
+
+
+
+
+
+/* トークテーブル(ガーリッシュナンバー) */
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (9, 1, 'メイ', 'left', 'character/mei/left/m00_l.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (9, 2, 'サキ', 'right', 'character/saki/right/s00_r.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (9, 3, 'メイ', 'left', 'character/mei/left/m00_l.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (9, 4, 'サキ', 'right', 'character/saki/right/s00_r.jpg', 1);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (9, 5, 'メイ', 'left', 'character/mei/left/m00_l.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (9, 6, 'サキ', 'right', 'character/saki/right/s00_r.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (9, 7, 'メイ', 'left', 'character/mei/left/m00_l.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (9, 8, 'サキ', 'right', 'character/saki/right/s00_r.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (9, 9, 'メイ', 'left', 'character/mei/left/m00_l.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (9, 10, 'サキ', 'right', 'character/saki/right/s00_r.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (9, 11, 'メイ', 'left', 'character/mei/left/m00_l.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (9, 12, 'サキ', 'right', 'character/saki/right/s00_r.jpg', 0);
+INSERT INTO talks (article_id, talk_num, talk_character, direction, character_image_url, next_image) VALUES (9, 13, 'メイ', 'left', 'character/mei/left/m00_l.jpg', 0);
+
+/* トークテーブル(ガーリッシュナンバー) */
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 1, 'normal', '', 'False', 'サキちゃん、いつになく嬉しそうですね。なんかいいことでもあったんですか？');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 2, 'normal', '', 'False', '最近ちょっと興味深いアニメを見始めてね。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 2, 'color', 'red', 'True', '「ガーリッシュ ナンバー」');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 2, 'normal', '', 'False', 'って言うアニメなの！');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 2, 'normal', '', 'True', 'メイは知ってる？');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 3, 'normal', '', 'False', '名前だけはどっかのまとめサイトで見たような気がしますが…');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 3, 'normal', '', 'True', 'どんなアニメなんです？');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 4, 'normal', '', 'False', '私もまだ一話しか見てないから詳しくは話せないんだけど…');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 4, 'normal', '', 'True', '烏丸千歳っていう新人声優の子が主人公のアニメで，');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 4, 'normal', '', 'True', 'この子がいろんなアニメのちょい役を演じている状況で物語がスタートするわ。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 5, 'normal', '', 'False', 'サキちゃんにしては珍しいアニメですね。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 5, 'normal', '', 'True', 'またいつものBLかと思いましたが…');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 5, 'normal', '', 'True', '一話はどんな内容だったんです？');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 6, 'normal', '', 'False', 'いつものとは失礼ね…');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 6, 'normal', '', 'True', '一話の内容は、千歳が声優業界の裏側に半ばグチのような疑問を持ちつつも，');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 6, 'normal', '', 'True', 'マネージャーである兄と一緒に、プロの声優として売れるために、日々頑張っている、って感じだったわ。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 6, 'normal', '', 'True', 'ある日、事務所の社長と販売元のプロデューサーの気まぐれで千歳が主役に抜擢されるところで、一話は終わったわ。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 7, 'normal', '', 'False', 'ふーん…どこにでもありそうな内容ですね…');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 7, 'normal', '', 'True', 'サキちゃんはこのアニメのどこが気に入ったんですか？');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 8, 'normal', '', 'False', '主人公の千歳がむちゃくちゃかわいいの！！
+');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 9, 'normal', '', 'False', 'えぇ…サキちゃんに百合ものの趣味なんてありましたっけ…？');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 9, 'normal', '', 'True', 'その千歳ちゃんてのはどんなキャラなんです？');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 10, 'normal', '', 'False', 'ん〜千歳は一言でいうと子供っぽい性格ね。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 10, 'normal', '', 'True', '表向きは礼儀正しく初々しい声優を演じてるけど裏ではグチる、');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 10, 'normal', '', 'True', '自分が売れないのはマネージャである兄や原作のせいにする、');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 10, 'normal', '', 'True', '才能があるとかかわいいって褒められるとすぐに調子にのるような子なの。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 11, 'normal', '', 'False', 'はぁ！？そんなガキっぽい子のどこがいいんですか！？');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 11, 'normal', '', 'True', '私なら1分間一緒にいるだけで頭が痛くなってしまいそうですわ！');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 12, 'normal', '', 'False', 'まぁ…あまりいい子とは言えないけど、根は真面目な子なの。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 12, 'normal', '', 'True', '心の中ではどうやったら一人前の声優として売れるのか彼女なりに真剣に考えていたり、');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 12, 'normal', '', 'True', 'たとえちょい役でも、家では必死にアフレコの練習を頑張れる子なのよ。');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 12, 'normal', '', 'True', 'まぁ、アフレコの練習がうまくいかない時は物に当たったりするんだけどね…');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 12, 'normal', '', 'True', '子供っぽくて、でも根は真面目な性格がメイを見てるみたいで落ち着くの！');
+INSERT INTO talk_details (article_id, talk_num, kind, info, indention, content) VALUES (9, 13, 'normal', '', 'False', '私はそんなに子供っぽくありません〜！！');
+
