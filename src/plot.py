@@ -6,6 +6,7 @@ import os
 APP_NAME = "/Users/tomoyuki/python_workspace/takeda"
 os.chdir(APP_NAME)
 
+import utils
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -24,21 +25,19 @@ df_org = pd.read_csv(f"data/{DATA_NAME}")
 # 説明変数、目的変数に分割
 df_data = df_org.iloc[:, 2:df_org.shape[1]]
 df_target = df_org.iloc[:, [1]]
+ 
+# 四分位範囲が0より大きい連続データ
+is_non_range_cont  = utils.check_large_q_cont(df_data, upper_q=.75, lower_q=.25, comparison="equal")
 
-# 連続・離散データを識別（説明変数の型で決定）
-is_continuous = df_data.dtypes=="float64"
+# 離散データ
+is_discrete = utils.check_discrete(df_data, tol=20)
 
-# 説明変数を連続データのみにする
-df_data = df_data.loc[:, is_continuous]
+# その他(一般の連続データ)
+is_cont = (is_non_range_cont==False) & (is_discrete==False)
 
-# 四分位範囲(75%点-25%点)を計算
-UPPER_Q = .75
-LOWER_Q = .25
-quantile_ranges = df_data.quantile(UPPER_Q) - df_data.quantile(LOWER_Q)
 
-# 四分位範囲が0より大きいかを識別
-is_large_quantile_ranges = quantile_ranges > 0
-df_data = df_data.loc[:, is_large_quantile_ranges]
+# データ選択
+df_data = df_data.loc[:, is_cont]
 
 
 # アニメーション作成
