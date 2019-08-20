@@ -1,0 +1,34 @@
+How Uber Goes
+	DIツール、DI機能
+	porirepo → monorepo(ビルドツール「Bazel」)
+	uber zapp
+	Kubernetes
+
+How I Write HTTP Web Services After Eight Years
+	・メンテナンス考慮
+	・コードの視認性
+	・他の人、経験ない人が理解できるように
+	・似たコード
+	構造体でグローバル変数を代理
+TinyGo
+	gopherのslackコミュニティで情報収集
+	LLVMを使ったコンパイラ
+	webassembly
+	gotoutineのサポートが不完全
+	gcはARMマイクロコントローラのみ対応
+
+PKI for Gophers
+
+
+observability in Go
+	log：log package
+	metrics: expvar package
+	trace: jaeger
+
+
+	gcp
+	クエリング
+	プロメテウス time series database
+	マイクロサービス
+	datadock
+	socket option
