@@ -2,7 +2,7 @@
 show databases;            # データベース一覧
 -- create database test;      # データベース作成
 -- drop database test;        # データベース削除
-use test;                  # データベース切り替え
+use tmp;                  # データベース切り替え
 select database();         # 接続中のデータベース表示
 select version();          # データベースサーバのバージョン確認
 
@@ -22,7 +22,7 @@ CREATE TABLE features (
 show columns from features;
 
 # jsonファイル読み込み
-LOAD DATA local infile '/Users/tomoyuki/Desktop/features.json' INTO TABLE features (feature);
+LOAD DATA local infile '/Users/tomoyuki/python_workspace/SegNet_tensorflow/test_data/json/features.json' INTO TABLE features (feature);
 
 ## データ情報
 ###  データセレクト
@@ -66,38 +66,81 @@ select * from features limit 3;
 
 select COUNT(*) from features where JSON_CONTAINS(feature, '"E"', '$.properties.ODD_EVEN');
 
-# 
+# 静的ピボット
+## テーブル初期化
 CREATE TABLE json_data (
  id INT NOT NULL AUTO_INCREMENT,
  d_type varchar(20) NOT NULL,
  blklot varchar(20) NOT NULL,
  odd_even varchar(20) NOT NULL,
+ STREET varchar(20) NOT NULL,
  PRIMARY KEY (id)
 );
 
 -- drop table json_data;
-
 show columns from json_data;
 
-
-insert into json_data (d_type, blklot, odd_even) 
+## インサート
+insert into json_data (d_type, blklot, odd_even, STREET) 
 select 
 	json_extract(feature, '$.type'),
 	json_extract(feature, '$.properties.BLKLOT'),
-	json_extract(feature, '$.properties.ODD_EVEN')
+	json_extract(feature, '$.properties.ODD_EVEN'),
+	json_extract(feature, '$.properties.STREET')
 from features;
 
 select * from json_data;
+select count(*) from json_data;
+
+# ユニーク要素取得
+select distinct concat(odd_even) from json_data order by odd_even;
+select distinct concat(STREET) from json_data order by STREET;
+
+# null補完
+update json_data set odd_even='"NULL"' where odd_even is null or odd_even='' or odd_even='null';
+update json_data set STREET='"NULL"' where STREET is null or STREET='' or STREET='null';
 
 
-select 
-	id,
-	json_extract(feature, '$.type') as type,
-	json_extract(feature, '$.properties.BLKLOT') as BLKLOT,
-	json_extract(feature, '$.properties.ODD_EVEN') as ODD_EVEN
-from features
-WHERE JSON_CONTAINS(feature, '"O"', '$.properties.ODD_EVEN')
-limit 3;
+-- select 
+-- 	id,
+-- 	json_extract(feature, '$.type') as type,
+-- 	json_extract(feature, '$.properties.BLKLOT') as BLKLOT,
+-- 	json_extract(feature, '$.properties.ODD_EVEN') as ODD_EVEN
+-- from features
+-- WHERE JSON_CONTAINS(feature, '"O"', '$.properties.ODD_EVEN')
+-- limit 3;
+
+
+# 動的ピボット(参考：https://codeday.me/jp/qa/20190511/798101.html)
+show columns from json_data;
+select * from json_data;
+
+SET @sql = NULL;
+SELECT GROUP_CONCAT(DISTINCT CONCAT('min(case when STREET = ''',STREET,''' then id end) AS ', STREET)) INTO @sql FROM json_data;
+SET @record = 'd_type';
+SET @table_name = 'json_data';
+SET @sql = CONCAT('SELECT ', @record,', ', @sql, ' FROM ' , @table_name,' GROUP BY ', @record);
+select @sql;
+
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+
+# CONCAT、DISTINCT、GROUP_CONCAT
+select CONCAT('max(case when odd_even = ''', odd_even,''' then id end) AS ', odd_even) FROM json_data;
+select DISTINCT CONCAT('max(case when odd_even = ''', odd_even,''' then id end) AS ', odd_even) FROM json_data;
+select GROUP_CONCAT(DISTINCT CONCAT('max(case when odd_even = ''', odd_even,''' then id end) AS ', odd_even)) FROM json_data;
+
+
+# 度数分布表
+show columns from json_data;
+SET @tmp = 'STREET';
+PREPARE s2 FROM CONCAT('SELECT count(id) as count, ', @tmp,' FROM json_data GROUP BY ', @tmp);
+EXECUTE s2;
+
+
+
 
 
 select id,json_extract(feature, '$.properties') as properties from features limit 3;
@@ -148,7 +191,6 @@ SET @sql = CONCAT('SELECT product_id, ', @sql, '
 PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
-
 
 
 
